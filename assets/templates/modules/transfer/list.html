@@ -1,0 +1,140 @@
+<script>
+function deletetransfer(idprop)
+{
+	bootbox.confirm("Are you sure to delete this record?", function(result) {
+	  if(result)
+	  {
+		  $.ajax({
+			  type: "POST",
+			  url: "{{SITE_URL('transfer/delete')}}",
+			  data: {id:idprop},
+			  success: function(data){
+				  $("#transfer-table").dataTable().fnReloadAjax();
+			  },
+			  dataType: 'json'
+			})
+	  }
+	}); 
+}
+function detiltransfer(id)
+{
+	document.location.href="{{SITE_URL('transfer/detil/')}}"+id;
+}
+$(document).on('ready',function(){
+	var s_class = '';
+	var table = $("#transfer-table").dataTable({
+		"bProcessing": true,
+        "bServerSide": true,
+		"sAjaxSource": "{{SITE_URL('transfer/listing')}}",
+		/*"sDom": 'B<"clear">lfrtipT',*/
+		fnServerParams:function(aoData){
+			aoData.push({"name":"id_group", "value":"{{__SESSION.bop_last.id_group}}"});
+		},
+		fnRowCallback:function(row, data, index){
+			console.log(data[7]);
+			if ( data[7].replace(/[\$,]/g, '')  > 0 ) {
+                $('td', row).eq(7).addClass('ss-green');
+            }
+			if ( data[7].replace(/[\$,]/g, '')  < 0 ) {
+				$('td', row).eq(7).addClass('ss-red');
+			}
+		}/*,
+		"oTableTools": {
+            "sSwfPath": "assets/templates/theme/scripts/DataTables/media/swf/copy_csv_xls_pdf.swf",
+			aButtons:[
+				{
+                    "sExtends": "xls",
+                    "sButtonText": "Export To Excel",
+                    "mColumns": "visible"
+                }
+			]
+        }*/,
+		"aoColumnDefs": [
+		  	{mRender : function(data, type, full){
+				var url = "{{SITE_URL('transfer/edit/')}}"+full[11];
+				if(full[12])
+				{
+					return '<button class="btn btn-inverse btn-icon glyphicons search" onclick="detiltransfer(\''+full[11]+'\')" title="Detil"><i></i>&nbsp;</button> <a class="btn btn-inverse btn-icon glyphicons pencil" title="Ubah" href="'+url+'"><i></i>&nbsp;</a> <button class="btn btn-inverse btn-icon glyphicons bin" onclick="deletetransfer(\''+full[11]+'\')" title="Hapus"><i></i>&nbsp;</button>';
+				}
+				else
+				{
+					return '<button class="btn btn-inverse btn-icon glyphicons search" onclick="detiltransfer(\''+full[11]+'\')" title="Detil"><i></i>&nbsp;</button>';
+				}
+			},bSearchable:false,bSearchable:false,sClass:'operation2',aTargets:[11]
+			},
+			{
+				sClass:'index',aTargets:[0]
+			},
+			{
+				bVisible:false,aTargets:[10]
+			},
+			{mRender : function(data, type, full)
+				{
+					dollars = full[5];
+					dollars = dollars.split('').reverse().join('')
+        .replace(/(\d{3}(?!$))/g, '$1,')
+        .split('').reverse().join('');
+					return dollars;
+				}
+				,aTargets:[5]
+			},
+			{mRender : function(data, type, full)
+				{
+					dollars = full[6];
+					dollars = dollars.split('').reverse().join('')
+        .replace(/(\d{3}(?!$))/g, '$1,')
+        .split('').reverse().join('');
+					return dollars;
+				}
+				,aTargets:[6]
+			}
+       ]
+	});
+	$(".dataTables_paginate").addClass('span6');
+	$(".dataTables_paginate").addClass('pull-right');
+});
+</script>
+<style>
+div.DTTT_container
+{
+	float:none;
+	top:25px;
+}
+.dataTables_paginate
+{
+	text-align:right;
+}
+</style>
+<div class="innerLR">
+	<div class="widget widget-gray widget-body-white">
+		<div class="widget-head">
+			<h4 class="heading">Data Rekapitulasi Bukti Transfer</h4>
+		</div>
+        <div style="background:#fff; padding-top:20px;">
+        <a type="button" class="btn btn-primary btn-icon glyphicons asterisk" href="{{SITE_URL('transfer/add')}}"><i></i>Tambah Data Rekapitulasi Bukti Transfer</a>
+        </div>
+		<div class="widget-body" style="padding: 10px 0;">
+			<table class="table table-striped table-bordered table-primary table-condensed" id="transfer-table">
+				<thead>
+					<tr>
+					  <th>No Bukti Transfer</th>
+                      <th>Tanggal Transfer</th>
+                      <th>Nama Penerima</th>
+                      <th>Bank Penerima</th>
+                      <th>No Rekening Penerima</th>
+                      <th>Nilai Kontrak</th>
+                      <th>Jumlah Diterima</th>
+                      <th>Selisih</th>
+                      <th>Tanggal Diterima</th>
+                    <th>Periode</th>
+						<th>&nbsp;</th>
+                        <th></th>
+					</tr>
+				</thead>
+				<tbody>
+					
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>

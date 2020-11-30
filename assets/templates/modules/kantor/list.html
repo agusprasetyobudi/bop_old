@@ -1,0 +1,208 @@
+<script>
+var kantor_url_transaction = "{{SITE_URL('kantor/add')}}";
+var edit_id = false;
+function editkantor(id)
+{
+	kantor_url_transaction = "{{SITE_URL('kantor/edit')}}";
+	$.ajax({
+	  type: "POST",
+	  url: "{{SITE_URL('kantor/getmatch_ajax')}}",
+	  data: {kode_kantor:id}, 
+	  success: function(data){
+	  },
+	  dataType: 'json'
+	}).done(function(data){
+		if(data.success)
+		{
+			$("#kantor-form #kode_kantor").val(data.data.kode_kantor);
+			$("#kantor-form #kode_kantor").attr('readonly',true);
+			$("#kantor-form #id_osp option[value='"+data.data.id_osp+"']").prop('selected',true);
+			edit_id = data.data.id_kabupaten;
+			$("#kantor-form #id_propinsi option[value='"+data.data.id_propinsi+"']").prop('selected',true);
+			$("#kantor-form #id_propinsi").trigger('change');
+			$("#kantor-form #nama_kantor").val(data.data.nama_kantor);
+			$("#kantor-modal-form").modal('show');
+		}
+	});
+}
+function deletekantor(idkantor)
+{
+	bootbox.confirm("Are you sure to delete this record?", function(result) {
+	  if(result)
+	  {
+		  $.ajax({
+			  type: "POST",
+			  url: "{{SITE_URL('kantor/delete')}}",
+			  data: {id:idkantor},
+			  success: function(data){
+				  $("#kantor-table").dataTable().fnReloadAjax();
+			  },
+			  dataType: 'json'
+			})
+	  }
+	}); 
+}
+$(document).on('ready',function(){
+	var table = $("#kantor-table").dataTable({
+		"bProcessing": true,
+        "bServerSide": true,
+		"sAjaxSource": "{{SITE_URL('kantor/listing')}}",
+		"aoColumnDefs": [
+		  	{mRender : function(data, type, full){
+				return '<button class="btn btn-inverse btn-icon glyphicons pencil" onclick="editkantor(\''+full[0]+'\')"><i></i>Ubah</button> <button class="btn btn-inverse btn-icon glyphicons bin" onclick="deletekantor(\''+full[0]+'\')"><i></i>Hapus</button>';
+			},bSearchable:false,bSearchable:false,sClass:'operation3',aTargets:[5]
+			},
+			{
+				sClass:'index',aTargets:[0]
+			}
+       ]
+	});
+	$("#kantor-add-btn").click(function(){
+		kantor_url_transaction = "{{SITE_URL('kantor/add')}}";
+		$("#kantor-modal-form").modal('show');
+	});
+	$("#kantor-form").validate({
+		submitHandler: function(form) {
+			var response;
+			$.ajax({
+			  type: "POST",
+			  url: kantor_url_transaction,
+			  data: $("#kantor-form").serialize(),
+			  success: function(data){
+			  },
+			  error : function(){
+				  $("#kantor-modal-form .alert-error span").text("Your Data Transaction Failed, Please Contact Your Administrator");
+				  $("#kantor-modal-form .alert-error").removeClass('hide');
+			  },
+			  dataType: 'json'
+			}).done(function(data){
+				 if(data.success)
+				 {
+					 table.fnReloadAjax();
+					 $("#kantor-modal-form").modal('hide');
+					 $("#kantor-modal-form .alert-error").removeClass('hide');
+					 $("#kantor-modal-form .alert-error").addClass('hide');
+				 }
+				 else
+				 {
+					 $("#kantor-modal-form .alert-error span").text(data.message);
+					 $("#kantor-modal-form .alert-error").removeClass('hide');
+				 }
+			  });
+		}
+	});
+	 $('#kantor-modal-form').on('hidden.bs.modal', function () {
+		 $("#kantor-form #kode_kantor").attr('readonly',false);
+         $("#kantor-form")[0].reset();
+    });
+	$("#kantor-form #id_propinsi").on('change',function(){
+		$.ajax({
+		  type: "POST",
+		  url: "{{SITE_URL('kabupaten/getbypropinsi_ajax')}}",
+		  data: {id_propinsi:$("#id_propinsi").val()},
+		  success: function(data){
+		  },
+		  dataType: 'json'
+		}).done(function(data){
+			$("#kantor-form #id_kabupaten").find('option').remove();
+			$("#kantor-form #id_kabupaten").append('<option value="">--SELECT KABUPATEN--</option>');
+			if(data.success)
+			{
+				$.each(data.data,function(key,val){
+					if(edit_id && edit_id==val.id)
+					$("#kantor-form #id_kabupaten").append('<option value="'+val.id+'" selected="selected">'+val.nama_kabupaten+'</option>');
+					else
+					$("#kantor-form #id_kabupaten").append('<option value="'+val.id+'">'+val.nama_kabupaten+'</option>');
+				});
+			}
+		});
+	});
+});
+</script>
+<div class="modal hide fade" id="kantor-modal-form">
+	
+  <div class="modal-header">
+    <h3>Tambah kantor</h3>
+  </div>
+  <form action="" method="post" id="kantor-form">
+  <div class="modal-body">
+    <p>
+    	<div class="widget widget-4">
+        	<div class="alert alert-error hide">
+                <button data-dismiss="alert" class="close" type="button">×</button>
+                <span>Oh snap!Change a few things up and try submitting
+                again.</span>
+            </div>
+            <div class="widget-head"><h4 class="heading">Kode kantor</h4></div>
+            <div class="separator"></div>
+            <div class="row-fluid">
+                <input type="text" class="span12 required" placeholder="Kode kantor" name="kode_kantor" id="kode_kantor">
+            </div>
+            <div class="widget-head"><h4 class="heading">OSP</h4></div>
+            <div class="separator"></div>
+            <div class="row-fluid">
+                <select name="id_osp" id="id_osp" class="span12 required">
+                	<option value="">--SELECT OSP--</option>
+                    {%for key,val in list_osp%}
+                    <option value="{{val.id}}">{{val.osp_name}}</option>
+                    {%endfor%}
+                </select>
+            </div>
+            <div class="widget-head"><h4 class="heading">Propinsi</h4></div>
+            <div class="separator"></div>
+            <div class="row-fluid">
+                <select id="id_propinsi" class="span12 required">
+                	<option value="">--SELECT PROPINSI--</option>
+                    {%for key,val in list_propinsi%}
+                    <option value="{{val.id}}">{{val.nama_propinsi}}</option>
+                    {%endfor%}
+                </select>
+            </div>
+            <div class="widget-head"><h4 class="heading">Kabupaten</h4></div>
+            <div class="separator"></div>
+            <div class="row-fluid">
+                <select name="id_kabupaten" id="id_kabupaten" class="span12 required">
+                	<option value="">--SELECT KABUPATEN--</option>
+                </select>
+            </div>
+            <div class="widget-head"><h4 class="heading">Nama kantor</h4></div>
+            <div class="separator"></div>
+            <div class="row-fluid">
+                <input type="text" class="span12 required" placeholder="Nama kantor" name="nama_kantor" id="nama_kantor">
+            </div>
+        </div>
+    </p>
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+    <button type="submit" class="btn btn-primary">Simpan</button>
+  </div>
+  </form>
+</div>
+<div class="innerLR">
+	<div class="widget widget-gray widget-body-white">
+		<div class="widget-head">
+			<h4 class="heading">Data kantor</h4>
+		</div>
+        <div style="background:#fff; padding-top:20px;">
+        <button type="button" class="btn btn-primary btn-icon glyphicons asterisk" id="kantor-add-btn"><i></i>Tambah kantor</button>
+        </div>
+		<div class="widget-body" style="padding: 10px 0;">
+			<table class="table table-striped table-bordered table-primary table-condensed" id="kantor-table">
+				<thead>
+					<tr>
+						<th>Kode kantor</th>
+						<th>OSP</th>
+                        <th>Propinsi</th>
+                        <th>Kabupaten</th>
+                        <th>Nama Kantor</th>
+						<th>&nbsp;</th>
+					</tr>
+				</thead>
+				<tbody>
+					
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>

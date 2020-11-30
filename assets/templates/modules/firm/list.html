@@ -1,0 +1,145 @@
+<script>
+function deletefirm(idprop)
+{
+	bootbox.confirm("Are you sure to delete this record?", function(result) {
+	  if(result)
+	  {
+		  $.ajax({
+			  type: "POST",
+			  url: "{{SITE_URL('firm/delete')}}",
+			  data: {id:idprop},
+			  success: function(data){
+				  $("#firm-table").dataTable().fnReloadAjax();
+			  },
+			  dataType: 'json'
+			})
+	  }
+	}); 
+}
+$(document).on('ready',function(){
+	var table = $("#firm-table").dataTable({
+		"bProcessing": true,
+        "bServerSide": true,
+		"sAjaxSource": "{{SITE_URL('firm/listing/')}}",
+		fnServerParams:function(aoData){
+			aoData.push({"name":"id_member", "value":"{{__SESSION.bop_last.id}}"});
+		},
+		/*"sDom": 'B<"clear">lfrtipT',
+		"oTableTools": {
+            "sSwfPath": "assets/templates/theme/scripts/DataTables/media/swf/copy_csv_xls.swf",
+			aButtons:[
+				"xls"
+			]
+        },*/
+		"fnRowCallback":function( nRow, aData, iDisplayIndex, iDisplayIndexFull){
+			if(aData[12]==1)
+			{
+				var oSettings = table.fnSettings();
+    			oSettings.aoData[iDisplayIndex].nTr.className = "green";
+			}
+			else
+			{
+				var oSettings = table.fnSettings();
+    			oSettings.aoData[iDisplayIndex].nTr.className = "red";
+			}
+		},
+		"aoColumnDefs": [
+		  	{mRender : function(data, type, full){
+				if(full[12]==0)
+				{
+				var url = "{{SITE_URL('firm/edit/')}}"+full[0];
+				return '<a class="btn btn-inverse btn-icon glyphicons pencil" title="Ubah" href="'+url+'"><i></i>&nbsp;</a> <button class="btn btn-inverse btn-icon glyphicons bin" onclick="deletefirm(\''+full[0]+'\')" title="Hapus"><i></i>&nbsp;</button>';
+				}
+				else
+				{
+					return '';
+				}
+			},bSearchable:false,bSearchable:false,sClass:'operation',aTargets:[11]
+			},
+			{
+				sClass:'index',aTargets:[0]
+			},
+			{
+				bVisible:false,aTargets:[12]
+			},
+			{mRender : function(data, type, full){
+				return full[11]
+			},aTargets:[10]
+			},		
+       ]
+	});
+	$(".dataTables_paginate").addClass('span6');
+});
+</script>
+<style>
+#firm-table tr.green td
+{
+	background:#C6EBB3;
+}
+#firm-table tr.red td
+{
+	background:#FFC0C6;
+}
+</style>
+<div class="innerLR">
+	<div class="widget widget-gray widget-body-white">
+		<div class="widget-head">
+			<h4 class="heading">Data Firm Transfer</h4>
+		</div>
+        <div style="background:#fff; padding-top:20px; text-align:right" class="row">
+            <table class="table table-bordered" style="width:350px" align="right">
+                <tr>
+                    <td width="200">
+                        Jumlah Entry
+                    </td>
+                    <td>
+                        {{info.total|default(0)}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Jumlah dikonfirmasi
+                    </td>
+                    <td>
+                        {{info.sudah|default(0)}}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Jumlah Belum dikonfirmasi
+                    </td>
+                    <td>
+                        {{info.belum|default(0)}}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div style="background:#fff; padding-top:20px;">
+        <a type="button" class="btn btn-primary btn-icon glyphicons asterisk" href="{{SITE_URL('firm/add')}}"><i></i>Tambah Data Transfer Firm</a>
+        </div>
+		<div class="widget-body" style="padding: 10px 0;">
+			<table class="table table-striped table-bordered table-primary table-condensed" id="firm-table">
+				<thead>
+					<tr>
+					  <th>No Bukti Transfer</th>
+                      <th>OSP</th>
+                      <th>Nama Kantor</th>
+                      <th>Tanggal Transfer</th>
+                      <th>Jabatan</th>
+                      <th>Bank Penerima</th>
+                      <th>No Rekening Penerima</th>
+                      <th>Nama Penerima</th>
+                      <th>Jumlah Transfer</th>
+                    	<th>Periode</th>
+                        <th>Keterangan</th>
+						<th>&nbsp;</th>
+                        <th></th>
+					</tr>
+				</thead>
+				<tbody>
+					
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>

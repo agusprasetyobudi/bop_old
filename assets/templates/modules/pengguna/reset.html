@@ -1,0 +1,63 @@
+<script>
+$(document).on('ready',function(){
+	$("#test-form").validate({
+		rules:{
+			oldpass : {
+				required : true,
+				remote : "{{SITE_URL('pengguna/checkoldpass')}}"
+			}
+		},
+		messages:{
+			oldpass : {
+				remote : "Password Lama Tidak Sama"
+			}
+		},
+		submitHandler: function(form){
+			
+		}
+	});
+	$("#test-form").on('submit',function(){
+		if($("#test-form").valid())
+		{
+			$.ajax({
+			  type: "POST",
+			  url: "{{SITE_URL('pengguna/changepass')}}",
+			  data: $("#test-form").serialize(),
+			  dataType: 'json'
+			}).done(function(data){
+				if(data.success)
+				{
+					alert("Password Anda Telah Berubah Silakan Lakukan Login Ulang");
+					document.location.href="{{SITE_URL('oauth/signout')}}";
+				}
+			});
+		}
+		return false;
+	});
+});
+</script>
+
+<div class="innerLR">
+	<div class="widget widget-gray widget-body-white">
+		<div class="widget-head">
+			<h4 class="heading">Ubah Password</h4>
+		</div>
+        <div style="background:#fff; padding-top:20px;">
+        <form action="" method="post" id="test-form">
+        	<div class="row-fluid">
+            	<div class="controls">
+	                <input type="password" class="span12" placeholder="Password Lama" name="oldpass" id="oldpass">
+                </div>
+                <div class="controls">
+	                <input type="password" class="span12 required" placeholder="Password" name="pass" id="_pass">
+                </div>
+                <div class="controls">
+	                <input type="password" class="span12 required" placeholder="Confirm Password" id="_pass_conf" equalto="#_pass">
+                </div>
+                <div class="controls">
+                	<input type="submit" id="btn-submit" class="btn btn-primary" value="Simpan" />
+                </div>
+            </div>
+        </form>
+	</div>
+</div>

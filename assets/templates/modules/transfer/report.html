@@ -1,0 +1,139 @@
+<script>
+$(document).on('ready',function(){
+	$("#excel").hide();
+	$("#reportform").validate({
+		submitHandler : function(){
+			$.ajax({
+			  type: "POST",
+			  url: "{{SITE_URL('transfer/report')}}",
+			  data: $("#reportform").serialize(),
+			  success: function(data){
+				  
+			  },
+			  dataType: 'html',
+			  beforeSend:function(){
+				  $("#excel").hide();
+				  $("#contentload").html('<b>Loading.........</b>');
+			  }
+			}).done(function(data){
+				$("#contentload").html(data);
+				$("#_periode_bulan").val($("#periode_bulan").val());
+				$("#_periode_tahun").val($("#periode_tahun").val());
+				$("#_kantor").val($("#kantor").val());
+			});
+			return false;
+		}
+	});
+	$("#osp").on('change',function(){
+		$("#kantor").find('option').remove();
+		$("#kantor").append('<option value="">--SEMUA KANTOR--</option>');
+		$.ajax({
+		  type: "POST",
+		  url: "{{SITE_URL('kantor/getlist_by_osp_ajax')}}",
+		  data: {id_osp:$("#osp").val()},
+		  dataType: 'json'
+		}).done(function(data){
+			if(data.success)
+			{
+				$.each(data.data,function(key,val){
+					$("#kantor").append('<option value="'+val.kode_kantor+'">'+val.nama_kantor+' - '+val.nama_kabupaten+'</option>');
+				});
+			}
+		});
+	});
+});
+</script>
+<div class="innerLR">
+	<div class="widget widget-gray widget-body-white">
+		<div class="widget-head">
+			<h4 class="heading">Report Bukti Transfer</h4>
+		</div>
+        <div style="background:#fff; padding-top:20px;">
+        	<form method="post" action="" id="reportform">
+            	<div class="row-fluid">
+                    <div class="span3">
+                    	<div class="controls">
+                            <!--<select id="periode_bulan" name="periode_bulan" class="required">-->
+                            <select id="periode_bulan" name="periode_bulan">
+                                <option value="">--PILIH PERIODE BULAN--</option>
+                                {%for key,val in list_month%}
+                                <option value="{{val.id}}">{{val.bulan}}</option>
+                                {%endfor%}
+                            </select>
+                    	</div>
+                    </div>
+                    <div class="span3">
+                    	<div class="controls">
+                            <select id="periode_tahun" name="periode_tahun">
+                            <!--<select id="periode_tahun" name="periode_tahun" class="required">-->
+                                <option value="">--PILIH PERIODE TAHUN--</option>
+                                {%set start = "now"|date("Y")%}
+                                {%set end = start+5%}
+                                {%for i in 2014..end%}
+                                <option value="{{i}}" {%if i==periode_tahun%}selected="selected"{%endif%}>{{i}}</option>
+                                {%endfor%}
+                            </select>
+                    	</div>
+                    </div>
+                    <div class="span3">
+                    	<div class="controls">
+                            <select id="osp" name="osp">
+                                <option value="">--SEMUA OSP--</option>
+                                {%for key,val in list_osp%}
+                                	{%set selected=""%}
+                                	{%if (__SESSION.bop_last.id_group==4) and (__SESSION.bop_last.id_osp==val.id)%}
+	                                    {%set selected="selected='selected'"%}
+                                    {%endif%}
+                                <option value="{{val.id}}" {{selected}}>{{val.osp_name}}</option>
+                                {%endfor%}
+                                {%if (__SESSION.bop_last.id_group==4)%}
+								<script>
+                                $(document).on('ready',function(){
+                                    $('#osp option:not(:selected)').attr('disabled', true);
+                                    $("#osp").trigger('change');
+                                });
+                                </script>
+                                {%endif%}
+                            </select>
+                    	</div>
+                    </div>
+                    <div class="span3">
+                    	<div class="controls">
+                            <select id="kantor" name="kantor">
+                                <option value="">--SEMUA KANTOR--</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row-fluid">
+                	<div class="span12">
+                    	<input type="hidden" name="toreport" value="true">
+                    	<button class="btn btn-icon btn-primary glyphicons circle_ok" type="submit"><i></i>Proses</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+	</div>
+</div>
+<div class="innerLR">
+	<div class="widget widget-gray widget-body-white">
+		<div class="widget-head">
+			<h4 class="heading">List Bukti Transfer</h4>
+		</div>
+		<div class="widget-body" style="padding: 10px 0;">
+        	<div style="background:#fff; padding-top:20px;">
+            <form action="{{SITE_URL('transfer/report')}}" method="post" target="_blank">
+            	<input type="hidden" name="periode_bulan" id="_periode_bulan">
+            	<input type="hidden" name="periode_tahun" id="_periode_tahun">
+            	<input type="hidden" name="kantor" id="_kantor">
+            	<input type="hidden" name="toreport" value="true">
+            	<input type="hidden" name="excel" value="1" />
+                <button type="submit" id="excel" class="btn btn-primary btn-icon glyphicons building"><i></i>Excel</button>
+            </form>
+            </div>
+            <div id="contentload">
+			Data Not Found
+            </div>
+		</div>
+	</div>
+</div>

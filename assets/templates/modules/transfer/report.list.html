@@ -1,0 +1,74 @@
+{%if _script is not defined %}
+<script>
+$("#excel").show();
+</script>
+{%endif%}
+<table class="table table-bordered" border="1" cellspacing="0" id="transfer-table">
+    <thead>
+        <tr>
+          <th>No Bukti Transfer</th>
+          <th>Tanggal Transfer</th>
+          <th>Nama Penerima</th>
+          <th>Jabatan</th>
+          <th>Bank Penerima</th>
+          <th>No Rekening Penerima</th>
+          <th>Keterangan Komponen Biaya</th>
+          <th>Periode Pemakaian Uang</th>
+          <th>Jumlah</th>
+    </thead>
+    <tbody>
+    	{%set total = 0%}
+        {%for key,val in list_top%}
+        <tr>
+        	<td valign="top">{{val.no_bukti}}</td>
+            <td valign="top">{{val.tanggal_transfer|date("d-m-Y")}}</td>
+            <td valign="top">{{val.nama_penerima}}</td>
+            <td valign="top">{{val.nama_jabatan}}</td>
+            <td valign="top">{{val.bank_tujuan}}</td>
+            <td valign="top">{{val.ke_no_rek}}</td>
+            <td valign="top">
+            <table class="table table-bordered" border="1" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>
+                            Komponen Biaya
+                        </th>
+                        <th>
+                            Sub Komponen
+                        </th>
+                        <th>
+                            Item# Dikontrak
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                	{%for keys,vals in val.listing%}
+            		<tr>
+                    	<td valign="top">{{vals.nama_komponen}}</td>
+                        <td valign="top">{%if vals.nama_subkomponen=='Activity'%}{{vals.nama_aktifitas}}{%else%}{{vals.nama_subkomponen}}({{vals.nama_aktifitas}}){%endif%}</td>
+                        <td valign="top">
+                        	{{vals.total}}
+                        </td>
+                    </tr>
+		            {%endfor%}
+                </tbody>
+            </table>
+            
+            </td>
+            <td valign="top">{{val.periode}}</td>
+            <td valign="top">{{val.jumlah|number_format(0,'.',',')}}</td>
+        </tr>
+        {%set total=total+val.jumlah%}
+        {%endfor%}
+    </tbody>
+    <tfoot>
+    	<tr>
+        	<td colspan="8">
+            	<b>Total</b>
+            </td>
+            <td>
+            	<b>{{total|number_format(0,'.',',')}}</b>
+            </td>
+        </tr>
+    </tfoot>
+</table>

@@ -1,0 +1,126 @@
+<script>
+$(document).on('ready',function(){
+	$("#chk_view_all").on('change',function(){
+		var chk= $(this).attr('checked') ? $(this).attr('checked') : false;
+		$(".chk_view").prop('checked',chk);
+	});
+	$("#chk_create_all").on('change',function(){
+		var chk= $(this).attr('checked') ? $(this).attr('checked') : false;
+		$(".chk_create").prop('checked',chk);
+	});
+	$("#chk_update_all").on('change',function(){
+		var chk= $(this).attr('checked') ? $(this).attr('checked') : false;
+		$(".chk_update").prop('checked',chk);
+	});
+	$("#chk_delete_all").on('change',function(){
+		var chk= $(this).attr('checked') ? $(this).attr('checked') : false;
+		$(".chk_delete").prop('checked',chk);
+	});
+	$("#chk_export_all").on('change',function(){
+		var chk= $(this).attr('checked') ? $(this).attr('checked') : false;
+		$(".chk_export").prop('checked',chk);
+	});
+	$("#chk_owner_all").on('change',function(){
+		var chk= $(this).attr('checked') ? $(this).attr('checked') : false;
+		$(".chk_owner").prop('checked',chk);
+	});
+	$("#previllage-form").on('submit',function(){
+		$.ajax({
+		  type: "POST",
+		  url: "{{SITE_URL('grouppengguna/akses/')}}"+$("#id_group_pengguna").val(),
+		  data: $("#previllage-form").serialize(),
+		  dataType: 'json'
+		}).done(function(){
+			document.location.href="{{SITE_URL('grouppengguna/akses/')}}"+$("#id_group_pengguna").val();
+		});
+		return false;
+	});
+});
+</script>
+<form action="" method="post" id="previllage-form">
+<div class="innerLR">
+	<div class="widget widget-gray widget-body-white">
+		<div class="widget-head">
+			<h4 class="heading">Hak Akses Kelompok Pengguna</h4>
+		</div>
+		<div style="padding: 10px 0 0;" class="widget-body">
+			
+			<div class="row-fluid">
+            <table class="table table-bordered table-primary" id="table-list-komponen">
+				<thead>
+					<tr>
+						<th class="center">No.</th>
+						<th>Module</th>
+                        <th>View <input type="checkbox" id="chk_view_all" /></th>
+						<th>Create <input type="checkbox" id="chk_create_all" /></th>
+                        <th>Update <input type="checkbox" id="chk_update_all" /></th>
+                        <th>Delete <input type="checkbox" id="chk_delete_all" /></th>
+						<th>Export Excel <input type="checkbox" id="chk_export_all" /></th>
+                        <th>Owner <input type="checkbox" id="chk_owner_all" /></th>
+					</tr>
+				</thead>
+				<tbody>
+                	{%for key,val in list_hakakses%}
+                	<tr>
+						<td class="center">{{loop.index}}</td>
+						<td>{{val.module_name}}</td>
+                        {#set checked#}
+                        {%set chk=''%}
+                        {%if (list_permission[val.id]['view'] is defined) and (list_permission[val.id]['view']==1)%}
+                        	{%set chk='checked="checked"'%}
+                        {%endif%}
+                        {#end set#}
+                        <td class="center"><input type="checkbox" name="chk_[{{val.id}}][view]" class="chk_view" value="1" {{chk}} /></td>
+                        {#set checked#}
+                        {%set chk=''%}
+                        {%if (list_permission[val.id]['c'] is defined) and (list_permission[val.id]['c']==1)%}
+                        	{%set chk='checked="checked"'%}
+                        {%endif%}
+                        {#end set#}
+						<td class="center"><input type="checkbox" name="chk_[{{val.id}}][create]" class="chk_create" value="1" {{chk}} /></td>
+                        {#set checked#}
+                        {%set chk=''%}
+                        {%if (list_permission[val.id]['u'] is defined) and (list_permission[val.id]['u']==1)%}
+                        	{%set chk='checked="checked"'%}
+                        {%endif%}
+                        {#end set#}
+                        <td class="center"><input type="checkbox" name="chk_[{{val.id}}][update]" class="chk_update" value="1" {{chk}} /></td>
+                        {#set checked#}
+                        {%set chk=''%}
+                        {%if (list_permission[val.id]['d'] is defined) and (list_permission[val.id]['d']==1)%}
+                        	{%set chk='checked="checked"'%}
+                        {%endif%}
+                        {#end set#}
+                        <td class="center"><input type="checkbox" name="chk_[{{val.id}}][delete]" class="chk_delete" value="1" {{chk}} /></td>
+                        {#set checked#}
+                        {%set chk=''%}
+                        {%if (list_permission[val.id]['export_excel'] is defined) and (list_permission[val.id]['export_excel']==1)%}
+                        	{%set chk='checked="checked"'%}
+                        {%endif%}
+                        {#end set#}
+                        <td class="center"><input type="checkbox" name="chk_[{{val.id}}][export]" class="chk_export" value="1" {{chk}} /></td>
+                        {#set checked#}
+                        {%set chk=''%}
+                        {%if (list_permission[val.id]['owner'] is defined) and (list_permission[val.id]['owner']==1)%}
+                        	{%set chk='checked="checked"'%}
+                        {%endif%}
+                        {#end set#}
+						<td class="center"><input type="checkbox" name="chk_[{{val.id}}][owner]" class="chk_owner" value="1" {{chk}} /></td>
+					</tr>
+                    {%endfor%}
+				</tbody>
+			</table>
+            </div>
+            <div class="row-fluid">
+            	<div class="span12">
+                	<div class="widget widget-4">
+                    	<div class="separator"></div>
+                 <input type="hidden" name="id_group_pengguna" id="id_group_pengguna" value="{{id_group_pengguna}}" /> 
+            	<button class="btn btn-primary" type="submit">Simpan</button>
+                	</div>
+                </div>
+            </div>
+		</div>	
+	</div>
+</div>
+</form>

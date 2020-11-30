@@ -1,0 +1,49 @@
+<script>
+$(document).on('ready',function(){
+	var table = $("#kontrak-table").dataTable({
+		/*"bProcessing": true,
+        "bServerSide": true,
+		"sAjaxSource": "{{SITE_URL('lastinvo/listing')}}",
+		"aoColumnDefs": [
+		  	{mRender : function(data, type, full){
+				return '<a class="btn btn-inverse btn-icon glyphicons notes" href="{{SITE_URL("lastinvo/manage")}}/'+full[5]+'"><i></i>Kelola</a>';
+			},bSearchable:false,bSearchable:false,sClass:'operation center',aTargets:[5]
+			},
+			{
+				sClass:'index',aTargets:[0]
+			}
+       ]*/
+	});
+});
+</script>
+<div class="innerLR">
+	<div class="widget widget-gray widget-body-white">
+		<div class="widget-head">
+			<h4 class="heading">Data Invoice Terakhir</h4>
+		</div>
+		<div class="widget-body" style="padding: 10px 0;">
+			<table class="table table-striped table-bordered table-primary table-condensed" id="kontrak-table">
+				<thead>
+					<tr>
+						<th>Kode Kontrak</th>
+                        <th>Nilai Kontrak</th>
+                        <th>Invoice S/D Saat ini</th>
+                        <th>Sisa Kontrak</th>
+						<th>&nbsp;</th>
+					</tr>
+				</thead>
+				<tbody>
+					{%for key,val in data%}
+                    <tr>
+						<td>{{val.kode_kontrak}}</td>
+                        <td>{{val.nilai_kontrak|number_format(0,'.',',')}}</td>
+                        <td>{{val.invoice|number_format(0,'.',',')}}</td>
+                        <td>{{(val.nilai_kontrak-val.invoice)|number_format(0,'.',',')}}</td>
+						<td><a class="btn btn-inverse btn-icon glyphicons notes" href="{{SITE_URL("lastinvo/manage/"~val.kode_kontrak)}}"><i></i>Kelola</td>
+					</tr>
+                    {%endfor%}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>

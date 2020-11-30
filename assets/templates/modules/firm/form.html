@@ -1,0 +1,279 @@
+<script>
+function addCommas(nStr)
+{
+	nStr += '';
+	x = nStr.split('.');
+	x1 = x[0];
+	x2 = x.length > 1 ? '.' + x[1] : '';
+	var rgx = /(\d+)(\d{3})/;
+	while (rgx.test(x1)) {
+		x1 = x1.replace(rgx, '$1' + ',' + '$2');
+	}
+	return x1 + x2;
+}
+function loadkantor(){
+	var edit_id= "{{kode_kantor}}";
+	$("#kontrak-form #kode_kantor").find('option').remove();
+	$("#kontrak-form #kode_kantor").append('<option value="">--SELECT KANTOR--</option>');
+	if($("#kontrak-form #id_osp")!=""){
+		$.ajax({
+		  type: "POST",
+		  url: "{{SITE_URL('kantor/getlist_by_osp_ajax')}}",
+		  data: {id_osp:$("#kontrak-form #id_osp").val()},
+		  dataType: 'json'
+		}).done(function(data){
+			if(data.success){
+				$.each(data.data,function(key,val){
+					if(edit_id==val.kode_kantor)
+					   $("#kontrak-form #kode_kantor").append('<option value="'+val.kode_kantor+'" selected="selected">'+val.nama_kantor+' - '+val.nama_kabupaten+'</option>');
+					else
+					   $("#kontrak-form #kode_kantor").append('<option value="'+val.kode_kantor+'">'+val.nama_kantor+' - '+val.nama_kabupaten+'</option>');
+				});
+			}
+		});
+	}
+}
+var loadsaldo = function (callback){
+    if($("#kontrak-form #kode_kantor")!=""){
+        $("#saldo").val("");
+		$.ajax({
+		  type: "POST",
+		  url: "{{SITE_URL('firm/getAmount')}}",
+		  data: {kode_kantor:$("#kontrak-form #kode_kantor").val()},
+		  dataType: 'json'
+		}).done(function(data){
+			if(data.success){
+                callback(Math.max(0, 50000000-data.data.total));
+			}
+            else{
+                callback(50000000);
+            }
+		}).fail(function(){
+            callback(50000000);
+        });
+	}
+}
+function setsaldo(saldo){
+    $("#jumlah").rules('remove');
+    $("#jumlah").rules('add',{
+        currency_max: saldo
+    });
+    var val = $("#kontrak-form").validate();
+    val.showErrors({"jumlah":"Sisa saldo yang harus ditransfer: "+addCommas(saldo)});
+}
+$(document).on('ready',function(){
+	$.validator.addMethod("currency_min", function(value, element, params){
+		if(value=="0"){
+			return false;
+		}
+		return true;	
+	}, $.validator.format("Silakan Masukan Angka Di Atas 0"));
+	$.validator.addMethod("currency_max", function(value, element, params){        
+		if($("#kode_jabatan").val()=="BKM" && $("#kode_kantor").val().indexOf("BKM") != -1){            
+            if(parseInt(value.replace(/,/g,''))>params){
+			    return false;
+            }
+		}
+		return true;	
+	}, function(param, element){
+        var newParam = addCommas(param);
+        return $.validator.format("Sisa saldo yang harus ditransfer: {0}", newParam);
+    });
+	$("#kontrak-form").validate({
+		rules: {
+			jumlah: {
+				currency_min: true,
+				currency_max: 50000000                
+			}
+		},
+		submitHandler: function(form) {
+			var edit_id= "{{kode_kantor}}";
+			if(edit_id=="")
+				url = "{{SITE_URL('firm/add')}}";
+			else
+				url = "{{SITE_URL('firm/edit/')}}"+$("#no_bukti").val();
+			var test = $("#kontrak-form #jumlah").val();
+			$("#kontrak-form #jumlah").val(test.replace(/,/g,''));
+			$.ajax({
+			  type: "POST",
+			  url: url,
+			  data: $("#kontrak-form").serialize(),
+			  dataType: 'json'
+			}).done(function(data){
+				if(data.success)
+				document.location.href="{{SITE_URL('firm')}}";
+			});
+			return false;
+		}
+	});
+	$("#id_osp").on('change',function(){
+		loadkantor();
+	});
+    $("#kode_kantor").on('change',function(){
+        if($("#kode_kantor").val().indexOf("BKM") != -1){
+            loadsaldo(setsaldo);
+        } else {
+            $("#jumlah").rules('remove');
+            $("#jumlah").valid();
+        }        
+	});
+	$(".datepicker").datepicker({dateFormat:"dd-mm-yy",changeYear:true,changeMonth:true});
+	$("#jumlah").maskMoney({thousands:',', decimal:'', allowZero:true,precision:0});
+	$("#id_osp").trigger('change');
+    $("#kode_jabatan").on('change',function(){
+		if(this.value=="K-TP"){
+            $("#jumlah").val(3000000);
+            $("#jumlah").attr('readonly','readonly');
+        } else {
+            $("#jumlah").val(0);
+            $("#jumlah").removeAttr('readonly');
+        }
+	});
+});
+</script>
+<form action="" method="post" id="kontrak-form">
+<div class="innerLR">
+	<div class="widget widget-gray widget-body-white">
+		<div class="widget-head">
+			<h4 class="heading">Form Kontrak</h4>
+		</div>
+		<div style="padding: 10px 0 0;" class="widget-body">
+			
+			<div class="row-fluid">
+                <div class="span6">
+                
+                    <div class="widget widget-4">
+                        <div class="widget-head"><h4 class="heading">No Bukti Transfer</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                            <div class="controls">
+                                <input type="text" class="span12 required" placeholder="No Bukti Transfer" name="no_bukti" id="no_bukti" {%if mode=='edit'%}readonly="readonly"{%endif%} value="{{no_bukti}}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="widget widget-4 row-fluid">
+                        <div class="widget-head"><h4 class="heading">Tanggal Transfer</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                            <div class="controls">
+                                <input type="text" class="span12 required datepicker" placeholder="Tanggal Transfer" name="tanggal_transfer" id="tanggal_transfer" readonly="readonly" value="{{tanggal_transfer|date('d-m-Y')|default('now'|date('d-m-Y'))}}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                	<div class="widget widget-4 row-fluid">
+                        <div class="widget-head"><h4 class="heading">Jabatan</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                            <div class="controls">
+                                <select name="kode_jabatan" id="kode_jabatan" class="required span12">
+                                	<option value="">--PILIH JABATAN--</option>
+                                    {%for key,val in list_jabatan%}
+                                    <option value="{{val.kode_jabatan}}" {%if val.kode_jabatan==kode_jabatan%}selected="selected"{%endif%}>{{val.nama_jabatan}}</option>
+                                    {%endfor%}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="widget widget-4 row-fluid">
+                        <div class="widget-head"><h4 class="heading">Kantor</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                            <div class="controls">
+                                <select id="id_osp" class="span4 required" {%if (__SESSION.bop_last.id_group==4)%}disabled="disabled"{%endif%}>
+                                    <option value="">--SELECT OSP--</option>
+                                    {%for key,val in list_osp%}
+                                    <option value="{{val.id}}" {%if (val.id==id_osp) or ((__SESSION.bop_last.id_group==4) and (__SESSION.bop_last.id_osp==val.id))%}selected="selected"{%endif%}>{{val.osp_name}}</option>
+                                    {%endfor%}
+                                </select>
+                                <select id="kode_kantor" name="kode_kantor" class="span8 required">
+                                    <option value="">--SELECT KANTOR--</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="widget widget-4 row-fluid">
+                        <div class="widget-head"><h4 class="heading">Periode</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                            <div class="controls">
+                                <select id="periode_bulan" class="span4 required" name="periode_bulan">
+                                    <option value="">--SELECT BULAN--</option>
+                                    {%for key,val in list_month%}
+                                    <option value="{{val.id}}" {%if val.id==periode_bulan%}selected="selected"{%endif%}>{{val.bulan}}</option>
+                                    {%endfor%}
+                                </select>
+                                <select id="periode_tahun" class="span8 required" name="periode_tahun">
+                                    <option value="">--SELECT TAHUN--</option>
+                                    {%set start = 2014%}
+                                    {%set end = start+11%}
+                                    {%for i in start..end%}
+                                    <option value="{{i}}" {%if i==periode_tahun%}selected="selected"{%endif%}>{{i}}</option>
+                                    {%endfor%}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="span6">
+                	<div class="widget widget-4">
+                        <div class="widget-head"><h4 class="heading">Bank Penerima</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                        	<div class="controls">
+	                            <input type="text" class="span12 required" placeholder="Bank Penerima" name="bank_tujuan" id="bank_tujuan" value="{{bank_tujuan}}">
+                            </div>
+                        </div>
+                    </div>
+                	<div class="widget widget-4">
+                        <div class="widget-head"><h4 class="heading">Nomor Rekening Penerima</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                        	<div class="controls">
+	                            <input type="text" class="span12 required" placeholder="Nomor Rekening Penerima" name="ke_no_rek" id="ke_no_rek" value="{{ke_no_rek}}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="widget widget-4">
+                        <div class="widget-head"><h4 class="heading">Nama Penerima</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                        	<div class="controls">
+	                            <input type="text" class="span12 required" placeholder="Nama Penerima" name="nama_penerima" id="nama_penerima" value="{{nama_penerima}}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="widget widget-4">
+                        <div class="widget-head"><h4 class="heading">Jumlah Ditransfer</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                        	<div class="controls">
+	                            <input type="text" class="span12 required" placeholder="Nama Penerima" name="jumlah" id="jumlah" value="{{jumlah|number_format(0,'',',')}}">
+                                <input type="hidden" name="saldo" id="saldo">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="widget widget-4">
+                        <div class="widget-head"><h4 class="heading">Keterangan</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                        	<div class="controls">
+	                            <textarea name="keterangan" class="span12">{{keterangan}}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+			</div>
+			<div class="row-fluid">
+            	<div class="span12">
+                	<div class="widget widget-4">
+                        <div class="separator"></div>
+                        <button class="btn btn-block btn-primary" type="submit">Simpan</button>
+                	</div>
+                </div>
+            </div>
+		</div>	
+	</div>
+</div>
+</form>

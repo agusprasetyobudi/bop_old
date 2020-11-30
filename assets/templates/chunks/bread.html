@@ -1,0 +1,12 @@
+<ul class="breadcrumb">
+    <li><a href="{{SITE_URL()}}" class="glyphicons home"><i></i> Dashboard</a></li>
+    {%for key,val in breadcrumb%}
+    	{%if loop.last%}
+        	<li class="divider"></li>
+            <li>{{val}}</li>
+        {%else%}
+            <li class="divider"></li>
+            <li><a href="{{SITE_URL(key)}}" class="">{{val}}</a></li>
+		{%endif%}    
+    {%endfor%}
+</ul>

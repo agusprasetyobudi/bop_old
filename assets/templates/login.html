@@ -1,0 +1,48 @@
+{%include 'chunks/p.header.html'%} 
+	<script>
+		$(document).on('ready',function(){
+			// $("#loginform").validate({
+			// 	submitHandler : function (form){
+			// 		$.ajax({
+			// 		  type: "POST",
+			// 		  url: "{{SITE_URL('oauth/auth')}}",
+			// 		  data: $("#loginform").serialize(),
+			// 		  success: function(){},
+			// 		  dataType: 'json'
+			// 		}).done(function(){
+			// 			// document.location.href="{{SITE_URL()}}";
+			// 		});
+			// 		// return false;	
+			// 	} 
+	});
+	</script>
+	<!-- Start Content -->
+	<div class="container-fluid login" style="border:none; background:none;">
+		<div id="login" style="border:none; background:none;"> 	
+			<form class="form-signin" method="post" id="loginform" action="{{SITE_URL('oauth/auth')}}">
+                <div class="widget widget-4">
+                    <div class="widget-head">
+                        <h4 class="heading">Please sign in</h4>
+                    </div>
+              </div>
+                <h2 class="form-signin-heading"><img src="assets/templates/theme/images/logo.gif"  width="35" /> {{__SETTINGS.title}}</h2>
+                <div class="uniformjs"> 
+                	<div class="control-group">
+                    	<div class="controls">
+		                    <input type="text" class="input-block-level required" placeholder="Username" name="username"> 
+                        </div>
+                    </div>
+                    <div class="control-group">
+                    	<div class="controls">
+                    <input type="password" class="input-block-level required" placeholder="Password" name="pass"> 
+                    	</div>
+                    </div>
+                    <label class="checkbox"><input type="checkbox" name="remember" value="1">Remember me</label>
+                </div>
+                <button class="btn btn-large btn-primary" id="#buttons" type="submit">Sign in</button>
+            </form>
+		</div>		
+				
+	</div> 
+</body>
+</html>

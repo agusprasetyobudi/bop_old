@@ -1,0 +1,68 @@
+<script>
+function deletekontrak(idprop)
+{
+	bootbox.confirm("Are you sure to delete this record?", function(result) {
+	  if(result)
+	  {
+		  $.ajax({
+			  type: "POST",
+			  url: "{{SITE_URL('kontrak/delete')}}",
+			  data: {kode_kontrak:idprop},
+			  success: function(data){
+				  $("#kontrak-table").dataTable().fnReloadAjax();
+			  },
+			  dataType: 'json'
+			})
+	  }
+	}); 
+}
+function editkontrak(id)
+{
+	document.location.href="{{SITE_URL('kontrak/edit/')}}"+id;
+}
+$(document).on('ready',function(){
+	var table = $("#kontrak-table").dataTable({
+		"bProcessing": true,
+        "bServerSide": true,
+		"sAjaxSource": "{{SITE_URL('kontrak/listing')}}",
+		"aoColumnDefs": [
+		  	{mRender : function(data, type, full){
+				return '<button class="btn btn-inverse btn-icon glyphicons pencil" onclick="editkontrak(\''+full[0]+'\')"><i></i>Ubah</button> <button class="btn btn-inverse btn-icon glyphicons bin" onclick="deletekontrak(\''+full[0]+'\')"><i></i>Hapus</button>';
+			},bSearchable:false,bSearchable:false,sClass:'operation',aTargets:[4]
+			},
+			{
+				sClass:'index',aTargets:[0]
+			}
+       ]
+	});
+	$("#kontrak-add-btn").on('click',function(){
+		document.location.href="{{SITE_URL('kontrak/add')}}";
+	});
+});
+</script>
+<div class="innerLR">
+	<div class="widget widget-gray widget-body-white">
+		<div class="widget-head">
+			<h4 class="heading">Data kontrak</h4>
+		</div>
+        <div style="background:#fff; padding-top:20px;">
+        <button type="button" class="btn btn-primary btn-icon glyphicons asterisk" id="kontrak-add-btn"><i></i>Tambah kontrak</button>
+        </div>
+		<div class="widget-body" style="padding: 10px 0;">
+			<table class="table table-striped table-bordered table-primary table-condensed" id="kontrak-table">
+				<thead>
+					<tr>
+						<th>Kode Kontrak</th>
+                        <th>Tanggal Kontrak</th>
+                        <th>Mulai Kontrak</th>
+                        <th>Akhir Kontrak</th>
+						<th>&nbsp;</th>
+					</tr>
+				</thead>
+				<tbody>
+					
+				</tbody>
+			</table>
+		</div>
+	</div>
+</div>

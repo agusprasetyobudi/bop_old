@@ -1,0 +1,634 @@
+<script>
+    function loadkantor(kode_kantor) {
+        var edit_id = "{{kode_kantor}}";
+        $("#kontrak-form #kode_kantor").find('option').remove();
+        $("#kontrak-form #kode_kantor").append('<option value=""> - SELECT KANTOR - </option>');
+        if ($("#kontrak-form #id_osp") != "") {
+            $.ajax({
+                type: "POST",
+                url: "{{SITE_URL('kantor/getlist_by_osp_ajax')}}",
+                data: {
+                    id_osp: $("#kontrak-form #id_osp").val(),
+                    id_kabupaten: $("#kontrak-form #id_kabupaten").val()
+				},
+                dataType: 'json'
+				}).done(function (data) {
+                if (data.success) {
+                    $.each(data.data, function (key, val) {
+                        if (edit_id == val.kode_kantor)
+						$("#kontrak-form #kode_kantor").append('<option value="' + val.kode_kantor + '" selected="selected">' + val.nama_kantor + ' - ' + val.nama_kabupaten + '</option>');
+                        else
+						$("#kontrak-form #kode_kantor").append('<option value="' + val.kode_kantor + '">' + val.nama_kantor + ' - ' + val.nama_kabupaten + '</option>');
+					});
+                    if (kode_kantor) {
+                        $("#kontrak-form #kode_kantor").val(kode_kantor);
+					}
+				}
+			});
+		}
+	}
+    function loadsubkomponen(id_subkomponen, id_aktifitas) {
+        $("#kontrak-form #id_subkomponen").find('option').remove();
+        $("#kontrak-form #id_subkomponen").append('<option value = ""> - SELECT SUB KOMPONEN - </option>');
+        $.ajax({
+            type: "POST",
+            url: "{{SITE_URL('komponen/getsubkomponen_by_komponen_ajax')}}",
+            data: {
+                id_komponen: $("#kontrak-form #id_komponen").val()
+			},
+            dataType: 'json'
+			}).done(function (data) {
+            if (data.success) {
+                $.each(data.data, function (key, val) {
+                    $("#kontrak-form #id_subkomponen").append('<option value = "' + val.id + '" > ' + val.nama_subkomponen + ' </option>');
+				});
+                if (id_subkomponen) {
+                    $("#kontrak-form #id_subkomponen").val(id_subkomponen);
+                    loadaktifitas(id_aktifitas);
+				}
+			}
+            $("#kontrak-form #id_subkomponen").trigger('change');
+		});
+	}
+    function loadaktifitas(id_aktifitas) {
+        $("#kontrak-form #id_aktifitas").find('option').remove();
+        $("#kontrak-form #id_aktifitas").append('<option value = ""> - SELECT AKTIFITAS - </option>');
+        $.ajax({
+            type: "POST",
+            url: "{{SITE_URL('aktifitas/list_subkomponen_aktifitas')}}",
+            data: {
+                id_subkomponen: $("#kontrak-form #id_subkomponen").val()
+			},
+            dataType: 'json'
+			}).done(function (data) {
+            if (data.success) {
+                $.each(data.data, function (key, val) {
+                    $("#kontrak-form #id_aktifitas").append('<option value = "' + val.id_subkomponen_aktifitas + '" > ' + val.nama_aktifitas + ' </option>');
+				});
+                if (id_aktifitas) {
+                    $("#kontrak-form #id_aktifitas").val(id_aktifitas);
+				}
+			}
+            $("#kontrak-form #id_aktifitas").trigger('change');
+		});
+	}
+    function makeJson() {
+        $arr = JSON.parse($("#id_tobedeleted").val());
+        $obj = {};
+        for($i=0;$i<$arr.length;$i++) {
+            $obj[$i] = $arr[$i];
+		}
+        $("#id_tobedeleted").val(JSON.stringify($obj));
+	}
+    $(document).on('ready', function () {
+        $("#kontrak-form").validate({
+            submitHandler: function (form) {
+                if ($("#table-list-komponen tbody tr").size() == 0) {
+                    bootbox.alert('<div class="alert alert-block alert-error fade in"><h4 class="alert-titleing" align="center">Silakan Masukan Komponen Biaya Kontrak Terlebih Dahulu<br>Minimal Satu Biaya Kontrak</h4></div>');
+                    //bootbox.alert("Silakan Masukan Komponen Biaya Kontrak Terlebih Dahulu<br>Minimal Satu Biaya Kontrak");
+					} else {
+                    var edit_id = "{{kode_kantor}}";
+                    if (edit_id == "")
+					url = "{{SITE_URL('kontrak/add')}}";
+                    else
+					url = "{{SITE_URL('kontrak/edit')}}";
+                    makeJson();
+					//alert($("#id_tobedeleted").val());
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: $("#kontrak-form").serialize(),
+                        dataType: 'json'
+						}).done(function (data) {
+                        //alert(JSON.stringify(data));
+                        if (data.success)
+						document.location.href = "{{SITE_URL('kontrak')}}";
+					});
+				}
+                return false;
+			}
+		});
+        $(".datepicker").datepicker({
+            dateFormat: "dd-mm-yy",
+            changeYear: true,
+            changeMonth: true
+		});
+        $("#kontrak-form #id_osp").on('change', function () {
+            loadkantor();
+		});
+        $("#kontrak-form #id_komponen").on('change', function () {
+            loadsubkomponen();
+		});
+        $("#kontrak-form #id_subkomponen").on('change', function () {
+            loadaktifitas();
+		});
+        $("#btn-tambah-item").on('click', function () {
+            if ($("#id_osp").val() == "") {
+                bootbox.alert('<div class="alert alert-block alert-error fade in"><h4 class="alert-titleing" align="center">Silakan Pilih OSP Terlebih Dahulu</h4></div>', function () {
+                    return true;
+				});
+                return false;
+			}
+            if ($("#kode_kantor").val() == "") {
+                bootbox.alert('<div class="alert alert-block alert-error fade in"><h4 class="alert-titleing" align="center">Silakan Pilih Kantor Terlebih Dahulu</h4></div>', function () {
+                    return true;
+				});
+                return false;
+			}
+            if ($("#id_aktifitas").val() == "" && $("#nominal").val() != "") {
+                bootbox.alert('<div class="alert alert-block alert-error fade in"><h4 class="alert-titleing" align="center">Silakan Pilih Aktifitas Terlebih Dahulu</h4></div>', function () {
+                    return true;
+				});
+                return false;
+				} else if ($("#id_aktifitas").val() != "" && $("#nominal").val() == "") {
+                bootbox.alert('<div class="alert alert-block alert-error fade in"><h4 class="alert-titleing" align="center">Silakan Isi Nominal Komponen Kontrak Dengan Benar</h4></div>', function () {
+                    return true;
+				});
+                return false;
+				} else if ($("#id_aktifitas").val() == "" && $("#nominal").val() == "") {
+                bootbox.alert('<div class="alert alert-block alert-error fade in"><h4 class="alert-titleing" align="center">Silakan Pilih Akitiftas dan Isi Nominal Komponen Kontrak Dengan Benar</h4></div>', function () {
+                    return true;
+				});
+                return false;
+				} else if ($("#id_aktifitas").val() != "" && $("#nominal").val() != "" && $("#id_osp").val() != "" && $("#kode_kantor").val() != "") {
+                nominal = $("#nominal").val();
+                nominal = nominal.replace(/,/g, '');
+                start_periode = $("#start_periode").val();
+				if (start_periode) {
+					start_periode_arr = start_periode.split('-');
+					start_periode = start_periode_arr[2] + '-' + start_periode_arr[1] + '-' + start_periode_arr[0];
+				}
+                finish_periode = $("#finish_periode").val();
+				if (finish_periode) {
+					finish_periode_arr = finish_periode.split('-');
+					finish_periode = finish_periode_arr[2] + '-' + finish_periode_arr[1] + '-' + finish_periode_arr[0];
+				}
+                var subkom = $("#kontrak-form #id_subkomponen option:selected").text() == "Activity" ? "" : $("#kontrak-form #id_subkomponen option:selected").text();
+                var info = '<input type="hidden" name="info[]" value="id_aktifitas=' + $("#id_aktifitas").val() + ']|[nominal=' + nominal + ']|[dari=' + $("#dari").val() + ']|[ke=' + $("#ke").val() + ']|[kode_kantor=' + $("#kode_kantor").val() + ']|[start_periode=' + start_periode + ']|[finish_periode=' + finish_periode + ']|[amandemen=' + $("#amandemen").val() + '">';
+                var index = $("#table-list-komponen tbody tr").size() + 1;
+			$("#table-list-komponen tbody").append('<tr><td class="center">' + index + '</td><td>' + $("#kontrak-form #id_komponen option:selected").text() + '</td><td>' + subkom + '</td><td>' + $("#kontrak-form #id_aktifitas option:selected").text() + '</td><td>' + $("#dari").val() + '</td><td>' + $("#ke").val() + '</td><td>' + $("#start_periode").val() + '</td><td>' + $("#finish_periode").val() + '</td><td>' + $("#amandemen").val() + '</td><td>' + $("#nominal").val() + '</td><td>' + $("#kontrak-form #kode_kantor option:selected").text() + '</td><td><button type="button" class="btn btn-inverse btn-icon glyphicons pencil btn-ubah-komponen"><i></i>Ubah</button> <button type="button" class="btn btn-inverse btn-icon glyphicons bin btn-amandemen-komponen"><i></i>Amandemen</button> <button type="button" class="btn btn-inverse btn-icon glyphicons bin btn-hapus-komponen"><i></i>Hapus</button>' + info + '</td></tr>');
+                $("#nominal").val(0);
+                $("#dari").val("");
+                $("#ke").val("");
+                $("#id_aktifitas option:first").prop('selected', true);
+                $("#id_osp option:first").prop('selected', true);
+                $("#id_osp").trigger('change');
+			}
+		});
+        $(".btn-hapus-komponen").live('click', function () {
+            var $tmp = [];
+            $tmp = JSON.parse($("#id_tobedeleted").val());
+            $id_item_kontrak = $(this).parent().parent().find("input[name=id_item_kontrak]").val();
+            if ($id_item_kontrak && $.inArray($id_item_kontrak,$tmp)<0) {
+                $tmp.push($id_item_kontrak);
+                $("#id_tobedeleted").val(JSON.stringify($tmp));
+			}
+            $(this).parent().parent().remove();
+            var inc = 1;
+            $("#table-list-komponen tbody tr").each(function () {
+                $(this).find('td:first').text(inc);
+                inc++;
+			});
+		});
+        $(".btn-ubah-komponen").live('click', function () {
+            $("select#id_komponen").val($(this).parent().parent().find("input[name=id_komponen]").val());
+            loadsubkomponen($(this).parent().parent().find("input[name=id_subkomponen]").val(),	$(this).parent().parent().find("input[name=id_aktifitas]").val());
+            $("select#id_osp").val($(this).parent().parent().find("input[name=id_osp]").val());
+            loadkantor($(this).parent().parent().find("input[name=kode_kantor]").val());
+            $("input#dari").val($(this).parent().parent().find(".dari").html().trim());
+            $("input#ke").val($(this).parent().parent().find(".ke").html().trim());
+			$start_periode = $(this).parent().parent().find(".start_periode").html().trim();
+			if ($start_periode) {
+				$("input#start_periode").val($start_periode);
+				start_periode_arr = $start_periode.split('-');
+				$start_periode = start_periode_arr[2] + '-' + start_periode_arr[1] + '-' + start_periode_arr[0];				
+			}			
+			$finish_periode = $(this).parent().parent().find(".finish_periode").html().trim();
+			if ($finish_periode) {
+				$("input#finish_periode").val($finish_periode);
+				finish_periode_arr = $finish_periode.split('-');
+				$finish_periode = finish_periode_arr[2] + '-' + finish_periode_arr[1] + '-' + finish_periode_arr[0];
+			}
+			$("input#amandemen").val(parseInt($(this).parent().parent().find(".amandemen").html().trim(),10));
+            $("input#nominal").val($(this).parent().parent().find(".nominal").html().trim());
+            $("#btn-ubah-item").show();
+            $("#btn-tambah-item").hide();
+            $("#btn-amandemen-item").hide();
+			$("select#id_komponen").prop("disabled", false);
+			$("select#id_subkomponen").prop("disabled", false); 
+			$("select#id_aktifitas").prop("disabled", false);
+			$("select#id_osp").prop("disabled", false);
+			$("select#kode_kantor").prop("disabled", false);
+			$("input#dari").prop("readonly", false);
+			$("input#ke").prop("readonly", false);
+            $("#rownum").val($(this).parent().parent().find("input[name=index]").val());
+            var $tmp = [];
+            $tmp = JSON.parse($("#id_tobedeleted").val());
+            $id_item_kontrak = $(this).parent().parent().find("input[name=id_item_kontrak]").val();
+            if ($id_item_kontrak && $.inArray($id_item_kontrak,$tmp)<0) {
+                $tmp.push($id_item_kontrak);
+                $("#id_tobedeleted").val(JSON.stringify($tmp));
+			}/**/
+		});
+        $(".btn-amandemen-komponen").live('click', function () {
+			$id_komponen = $(this).parent().parent().find("input[name=id_komponen]").val();
+			$id_subkomponen = $(this).parent().parent().find("input[name=id_subkomponen]").val();
+			$id_aktifitas = $(this).parent().parent().find("input[name=id_aktifitas]").val();
+			$id_osp = $(this).parent().parent().find("input[name=id_osp]").val();
+			$kode_kantor = $(this).parent().parent().find("input[name=kode_kantor]").val();
+			$dari = $(this).parent().parent().find(".dari").html().trim();
+			$ke = $(this).parent().parent().find(".ke").html().trim();
+			$start_periode = $(this).parent().parent().find(".start_periode").html().trim();
+			if ($start_periode) {
+				$("input#start_periode").val($start_periode);
+				start_periode_arr = $start_periode.split('-');
+				$start_periode = start_periode_arr[2] + '-' + start_periode_arr[1] + '-' + start_periode_arr[0];
+			}			
+			$finish_periode = $(this).parent().parent().find(".finish_periode").html().trim();
+			if ($finish_periode) {
+				$("input#finish_periode").val($finish_periode);
+				finish_periode_arr = $finish_periode.split('-');
+				$finish_periode = finish_periode_arr[2] + '-' + finish_periode_arr[1] + '-' + finish_periode_arr[0];
+			}
+			$amandemen = parseInt($(this).parent().parent().find(".amandemen").html().trim(),10);
+			$nominal = $(this).parent().parent().find(".nominal").html().trim();
+            $("select#id_komponen").val($id_komponen); 
+			$("select#id_komponen").prop("disabled", true);
+            loadsubkomponen($id_subkomponen, $id_aktifitas); 
+			$("select#id_subkomponen").prop("disabled", true); 
+			$("select#id_aktifitas").prop("disabled", true);
+            $("select#id_osp").val($id_osp); 
+			$("select#id_osp").prop("disabled", true);
+            loadkantor($kode_kantor); 
+			$("select#kode_kantor").prop("disabled", true);
+            $("input#dari").val($dari); 
+			$("input#dari").prop("readonly", true);
+            $("input#ke").val($ke); 
+			$("input#ke").prop("readonly", true);
+            $("input#amandemen").val($amandemen+1); 
+            $("input#nominal").val($nominal);
+            $("#btn-amandemen-item").show();
+            $("#btn-tambah-item").hide();
+            $("#btn-ubah-item").hide();
+            $("#rownum").val($(this).parent().parent().find("input[name=index]").val());
+            $("#id").val($(this).parent().parent().find("input[name=id]").val());
+			$("#info").val('id_aktifitas=' + $id_aktifitas + ']|[nominal=' + $nominal.replace(/,/g, '') + ']|[dari=' + $dari + ']|[ke=' + $ke + ']|[kode_kantor=' + $kode_kantor + ']|[start_periode=' + $start_periode + ']|[finish_periode=' + $finish_periode + ']|[amandemen=' + $amandemen + ']|[amandemen_flg=1');
+			var $tmp = [];
+            $tmp = JSON.parse($("#id_tobedeleted").val());
+            $id_item_kontrak = $(this).parent().parent().find("input[name=id_item_kontrak]").val();
+            if ($id_item_kontrak && $.inArray($id_item_kontrak,$tmp)<0) {
+                $tmp.push($id_item_kontrak);
+                $("#id_tobedeleted").val(JSON.stringify($tmp));
+			}/**/
+		});
+        $("#btn-ubah-item").live('click', function () {
+            var $rownum = "tr#row-" + $("#rownum").val();
+            $($rownum).find("td.nama_komponen").html('<input type="hidden" name="id_komponen" value="' + $("#id_komponen option:selected").val() + '">' + $("#id_komponen option:selected").text());
+            $($rownum).find("td.nama_subkomponen").html('<input type="hidden" name="id_subkomponen" value="' + $("#id_subkomponen option:selected").val() + '">' + $("#id_subkomponen option:selected").text());
+            $($rownum).find("td.nama_aktifitas").html('<input type="hidden" name="id_aktifitas" value="' + $("#id_aktifitas option:selected").val() + '">' + $("#id_aktifitas option:selected").text());
+            $($rownum).find("td.dari").html($("input#dari").val());
+            $($rownum).find("td.ke").html($("input#ke").val());
+            $($rownum).find("td.nominal").html($("input#nominal").val());
+			start_periode = $("input#start_periode").val();
+			if(start_periode) {
+				$($rownum).find("td.start_periode").html(start_periode);
+				start_periode_arr = start_periode.split('-');
+				start_periode = start_periode_arr[2] + '-' + start_periode_arr[1] + '-' + start_periode_arr[0];
+			}
+			finish_periode = $("input#finish_periode").val();
+			if(finish_periode) {
+				$($rownum).find("td.finish_periode").html(finish_periode);
+				finish_periode_arr = finish_periode.split('-');
+				finish_periode = finish_periode_arr[2] + '-' + finish_periode_arr[1] + '-' + finish_periode_arr[0];
+			}			
+			$($rownum).find("td.amandemen").html($("input#amandemen").val());
+            $($rownum).find("td.nama_kantor").html('<input type="hidden" name="id_osp" value="' + $("#id_osp option:selected").val() + '"><input type="hidden" name="kode_kantor" value="' + $("#kode_kantor option:selected").val() + '">' + $("#kode_kantor option:selected").text());
+            $($rownum).find("input[name='info[]']").val('id_aktifitas=' + $("#id_aktifitas option:selected").val() + ']|[nominal=' + $("input#nominal").val().replace(/,/g, '') + ']|[dari=' + $("input#dari").val() + ']|[ke=' + $("input#ke").val() + ']|[kode_kantor=' + $("#kode_kantor option:selected").val() + ']|[start_periode=' + start_periode + ']|[finish_periode=' + finish_periode + ']|[amandemen=' + $("input#amandemen").val());
+            $("select#id_komponen").val('');
+            $("select#id_subkomponen").val('');
+            $("select#id_aktifitas").val('');
+            $("input#dari").val('');
+            $("input#ke").val('');
+            $("input#nominal").val('');
+			$("input#start_periode").val('');
+			$("input#finish_periode").val('');
+			$("input#amandemen").val('');
+            $("select#id_osp").val('');
+            $("select#kode_kantor").val('');
+            $("#btn-tambah-item").show();
+            $("#btn-ubah-item").hide();
+            $("#btn-amandemen-item").hide();
+		});
+        $("#btn-amandemen-item").live('click', function () {
+			id = $("#id").val();
+			nominal = $("#nominal").val();
+			nominal = nominal.replace(/,/g, '');
+			start_periode = $("#start_periode").val();
+			start_periode_arr = start_periode.split('-');
+			start_periode = start_periode_arr[2] + '-' + start_periode_arr[1] + '-' + start_periode_arr[0];
+			finish_periode = $("#finish_periode").val();
+			finish_periode_arr = finish_periode.split('-');
+			finish_periode = finish_periode_arr[2] + '-' + finish_periode_arr[1] + '-' + finish_periode_arr[0];
+			var subkom = $("#kontrak-form #id_subkomponen option:selected").text() == "Activity" ? "" : $("#kontrak-form #id_subkomponen option:selected").text();
+			var info = '<input type="hidden" name="info[]" value="id_amandemen=' + $("#id").val() + ']|[id_aktifitas=' + $("#id_aktifitas").val() + ']|[nominal=' + nominal + ']|[dari=' + $("#dari").val() + ']|[ke=' + $("#ke").val() + ']|[kode_kantor=' + $("#kode_kantor").val() + ']|[start_periode=' + start_periode + ']|[finish_periode=' + finish_periode + ']|[amandemen=' + $("#amandemen").val() + ']|[amandemen_flg=0">';
+			index = parseInt($("#rownum").val(),10);
+			$rownum = "tr#row-" + index;
+			$($rownum).after('<tr><td class="center">' + (index+1) + '</td><td>' + $("#kontrak-form #id_komponen option:selected").text() + '</td><td>' + subkom + '</td><td>' + $("#kontrak-form #id_aktifitas option:selected").text() + '</td><td>' + $("#dari").val() + '</td><td>' + $("#ke").val() + '</td><td>' + $("#start_periode").val() + '</td><td>' + $("#finish_periode").val() + '</td><td>' + $("#amandemen").val() + '</td><td>' + $("#nominal").val() + '</td><td>' + $("#kontrak-form #kode_kantor option:selected").text() + '</td><td><button type="button" class="btn btn-inverse btn-icon glyphicons pencil btn-ubah-komponen"><i></i>Ubah</button> <button type="button" class="btn btn-inverse btn-icon glyphicons bin btn-amandemen-komponen"><i></i>Amandemen</button> <button type="button" class="btn btn-inverse btn-icon glyphicons bin btn-hapus-komponen"><i></i>Hapus</button></td></tr>' + info);
+			$($rownum).find("input[name='info[]']").val($("#info").val());
+			$($rownum).find("button[class='btn-amandemen-komponen']").hide();
+			$("#table-list-komponen tbody tr").each(function(i){
+				$(this).find(":first").html(i+1);
+			});
+            $("select#id_komponen").val('');
+            $("select#id_subkomponen").val('');
+            $("select#id_aktifitas").val('');
+            $("input#dari").val('');
+            $("input#ke").val('');
+            $("input#nominal").val('');
+			$("input#start_periode").val('');
+			$("input#finish_periode").val('');
+			$("input#amandemen").val('');
+            $("select#id_osp").val('');
+            $("select#kode_kantor").val('');
+            $("#btn-tambah-item").show();
+            $("#btn-ubah-item").hide();
+            $("#btn-amandemen-item").hide();
+		});
+        $("#nominal").maskMoney({
+            thousands: ',',
+            decimal: '',
+            allowZero: true,
+            precision: 0
+		}); {%if mode == 'edit'%} $("#id_osp").trigger('change'); {%endif%}
+	});
+</script>
+<form action="" method="post" id="kontrak-form">
+    <input type="hidden" name="id_tobedeleted" id="id_tobedeleted" value="[]">
+    <div class="innerLR">
+        <div class="widget widget-gray widget-body-white">
+            <div class="widget-head">
+                <h4 class="heading">Form Kontrak</h4>
+			</div>
+            <div style="padding: 10px 0 0;" class="widget-body">
+                <div class="row-fluid">
+                    <div class="span6">
+                        <div class="widget widget-4">
+                            <div class="widget-head">
+                                <h4 class="heading">Kode Kontrak</h4>
+							</div>
+                            <div class="separator"></div>
+                            <div class="row-fluid">
+                                <div class="controls">
+                                    <input type="text" class="span12 required" maxlength="9" placeholder="Kode Kontrak" name="kode_kontrak" id="kode_kontrak" {%if mode=='edit' %} readonly="readonly" {%endif%} value="{{kode_kontrak}}">
+                                    <input type="hidden" id="rownum">
+                                    <input type="hidden" id="id">
+									<input type="hidden" id="info">
+								</div>
+							</div>
+						</div>
+                        <div class="widget widget-4 row-fluid">
+                            <div class="widget-head">
+                                <h4 class="heading">Tanggal Kontrak</h4>
+							</div>
+                            <div class="separator"></div>
+                            <div class="row-fluid">
+                                <div class="controls">
+                                    <input type="text" class="span12 required datepicker" placeholder="Tanggal Kontrak" name="tanggal_kontrak" id="tanggal_kontrak" readonly="readonly" value="{{tanggal_kontrak|date('d-m-Y')|default('now'|date('d-m-Y'))}}">
+								</div>
+							</div>
+						</div>
+					</div>
+                    <div class="span6">
+                        <div class="widget widget-4">
+                            <div class="widget-head">
+                                <h4 class="heading">Tanggal Kontrak Mulai</h4>
+							</div>
+                            <div class="separator"></div>
+                            <div class="row-fluid">
+                                <div class="controls">
+                                    <input type="text" class="span12 required datepicker" placeholder="Tanggal Kontrak Mulai" name="tanggal_kontrak_mulai" id="tanggal_kontrak_mulai" readonly="readonly" value="{{tanggal_kontrak_mulai|date('d-m-Y')|default('now'|date('d-m-Y'))}}">
+								</div>
+							</div>
+						</div>
+                        <div class="widget widget-4">
+                            <div class="widget-head">
+                                <h4 class="heading">Tanggal Kontrak Akhir</h4>
+							</div>
+                            <div class="separator"></div>
+                            <div class="row-fluid">
+                                <div class="controls">
+                                    <input type="text" class="span12 required datepicker" placeholder="Tanggal Kontrak Akhir" name="tanggal_kontrak_akhir" id="tanggal_kontrak_akhir" readonly="readonly" value="{{tanggal_kontrak_akhir|date('d-m-Y')|default('now'|date('d-m-Y'))}}">
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+    <div class="innerLR">
+        <div class="widget widget-gray widget-body-white">
+            <div class="widget-head">
+                <h4 class="heading">Komponen Biaya Kontrak</h4>
+			</div>
+            <div style="padding: 10px 0 0;" class="widget-body">
+                <div class="row-fluid">
+                    <div class="span6">
+                        <div class="widget widget-4">
+                            <div class="widget-head">
+                                <h4 class="heading">Komponen Biaya</h4>
+							</div>
+                            <div class="separator"></div>
+                            <div class="row-fluid">
+                                <div class="controls">
+                                    <select id="id_komponen" class="span4">
+                                        <option value="">SELECT KOMPONEN</option>
+                                        {%for key,val in list_komponen%}
+                                        <option value="{{val.id}}">{{val.nama_komponen}}</option>
+                                        {%endfor%}
+									</select>
+                                    <select id="id_subkomponen" class="span4">
+                                        <option value="">-SELECT SUB KOMPONEN-</option>
+									</select>
+                                    <select id="id_aktifitas" class="span4">
+                                        <option value="">-SELECT AKTIFITAS-</option>
+									</select>
+								</div>
+							</div>
+						</div>
+                        <div class="widget widget-4 row-fluid">
+                            <div class="widget-head">
+                                <h4 class="heading">Start Periode</h4>
+							</div>
+                            <div class="separator"></div>
+                            <div class="row-fluid">
+                                <div class="controls">
+                                    <input type="text" class="span12 required datepicker" placeholder="Start Periode" name="start_periode" id="start_periode" value="{{start_periode|date('d-m-Y')|default('now'|date('d-m-Y'))}}">
+								</div>
+							</div>
+						</div>
+                        <div class="widget widget-4 row-fluid">
+                            <div class="widget-head">
+                                <h4 class="heading">Amandemen / Nominal</h4>
+							</div>
+                            <div class="separator"></div>
+                            <div class="row-fluid">
+                                <div class="controls">
+                                    <input type="text" class="span2" placeholder="Amandemen" id="amandemen" value="1">
+                                    <input type="text" class="span10" placeholder="Nominal" id="nominal">
+								</div>
+							</div>
+						</div>
+					</div>
+                    <div class="span6">
+                        <div class="widget widget-4">
+                            <div class="widget-head">
+                                <h4 class="heading">Dari / Ke</h4>
+							</div>
+                            <div class="separator"></div>
+                            <div class="row-fluid">
+                                <div class="controls">
+                                    <input type="text" class="span6" placeholder="Dari" id="dari" value="{{dari}}">
+                                    <input type="text" class="span6" placeholder="Ke" id="ke" value="{{ke}}">
+								</div>
+							</div>
+						</div>
+                        <div class="widget widget-4 row-fluid">
+                            <div class="widget-head">
+                                <h4 class="heading">Finish Periode</h4>
+							</div>
+                            <div class="separator"></div>
+                            <div class="row-fluid">
+                                <div class="controls">
+                                    <input type="text" class="span12 required datepicker" placeholder="Finish Periode" name="finish_periode" id="finish_periode" value="{{finish_periode|date('d-m-Y')|default('now'|date('d-m-Y'))}}">
+								</div>
+							</div>
+						</div>
+                        <div class="widget widget-4">
+                            <div class="widget-head">
+                                <h4 class="heading">Kantor</h4>
+							</div>
+                            <div class="separator"></div>
+                            <div class="row-fluid">
+                                <div class="controls">
+                                    <select id="id_osp" class="span4 required">
+                                        <option value="">--SELECT OSP--</option>
+                                        {%for key,val in list_osp%}
+                                        <option value="{{val.id}}" {%if val.id==id_osp%}selected="selected" {%endif%}>{{val.osp_name}}</option>
+                                        {%endfor%}
+									</select>
+                                    <select id="kode_kantor" class="span8">
+                                        <option value="">--SELECT KANTOR--</option>
+									</select>
+                                    <button class="btn btn-info btn-icon glyphicons inbox_in" type="button" id="btn-tambah-item">
+                                        <i></i>Tambah Item
+									</button>
+                                    <button class="btn btn-info btn-icon glyphicons inbox_in" type="button" id="btn-ubah-item" style="display:none">
+                                        <i></i>Ubah Item
+									</button>
+                                    <button class="btn btn-info btn-icon glyphicons inbox_in" type="button" id="btn-amandemen-item" style="display:none">
+                                        <i></i>Amandemen Item
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+                <div class="row-fluid">
+                    <table class="table table-bordered table-primary" id="table-list-komponen">
+                        <thead>
+                            <tr>
+                                <th class="center">No.</th>
+                                <th>Komponen</th>
+                                <th>Subkomponen</th>
+                                <th>Aktifitas</th>
+                                <th>Dari</th>
+                                <th>Ke</th>
+                                <th>Start Periode</th>
+                                <th>Finish Periode</th>
+                                <th>Amandemen</th>
+                                <th>Nilai Kontrak</th>
+                                <th>Kantor</th>
+                                <th>&nbsp;</th>
+							</tr>
+						</thead>
+                        <tbody>
+                            {%if mode=="edit"%} {%for key,val in info%}
+                            <tr id="row-{{loop.index}}">
+                                <td class="center">
+                                    <input type="hidden" name="id" value="{{val.id}}"> {{loop.index}}                                    
+								</td>
+                                <td class="nama_komponen">
+                                    <input type="hidden" name="id_komponen" value="{{val.id_komponen}}"> {{val.nama_komponen}}
+								</td>
+                                <td class="nama_subkomponen">
+                                    <input type="hidden" name="id_subkomponen" value="{{val.id_subkomponen}}"> {{val.nama_subkomponen}}
+								</td>
+                                <td class="nama_aktifitas">
+                                    <input type="hidden" name="id_aktifitas" value="{{val.id_aktifitas}}"> {{val.nama_aktifitas}}
+								</td>
+                                <td class="dari">
+                                    {{val.dari}}
+								</td>
+                                <td class="ke">
+                                    {{val.ke}}
+								</td>
+                                <td class="start_periode">
+                                    {%if(val.start_periode)%}{{val.start_periode|date('d-m-Y',0)}}
+									{%elseif(val.periode_bulan==null)%}
+									{%elseif(val.periode_bulan>9)%}01-{{val.periode_bulan}}-{{val.periode_tahun}}
+									{%elseif(val.periode_bulan<=9)%}01-0{{val.periode_bulan}}-{{val.periode_tahun}}									
+									{%endif%}
+								</td>
+                                <td class="finish_periode">
+                                    {%if(val.finish_periode)%}{{val.finish_periode|date('d-m-Y',0)}}
+									{%elseif(val.periode_bulan==null)%}
+									{%elseif(val.periode_bulan>9)%}01-{{val.periode_bulan}}-{{val.periode_tahun}}
+									{%elseif(val.periode_bulan<=9)%}01-0{{val.periode_bulan}}-{{val.periode_tahun}}
+									{%endif%}
+								</td>
+                                <td class="amandemen">
+                                    {%if(val.amandemen)%}{{val.amandemen}}{%else%}1{%endif%}
+								</td>
+                                <td class="nominal">
+                                    {{val.nominal|number_format(0,'',',')}}
+								</td>
+                                <td class="nama_kantor">
+                                    <input type="hidden" name="id_osp" value="{{val.id_osp}}">
+                                    <input type="hidden" name="kode_kantor" value="{{val.kode_kantor}}"> {{val.nama_kantor}} - {{val.nama_kabupaten}}
+								</td>
+                                <td>
+                                    <button type="button" class="btn btn-inverse btn-icon glyphicons pencil btn-ubah-komponen">
+                                        <i></i>Ubah
+									</button>
+									{%if(val.amandemen_flg==1)%}
+                                    <button type="button" class="btn btn-inverse btn-icon glyphicons bin btn-amandemen-komponen">
+                                        <i></i>Amandemen
+									</button>{%else%}
+                                    <button type="button" class="btn btn-inverse btn-icon glyphicons bin btn-amandemen-komponen">
+                                        <i></i>Amandemen
+									</button>{%endif%}
+                                    <button type="button" class="btn btn-inverse btn-icon glyphicons bin btn-hapus-komponen">
+                                        <i></i>Hapus
+									</button>
+                                    <input type="hidden" name="id_item_kontrak" value="{{val.id}}">
+                                    <input type="hidden" name="info[]" value="id_aktifitas={{val.id_aktifitas}}]|[nominal={{val.nominal}}]|[dari={{val.dari}}]|[ke={{val.ke}}">
+                                    <input type="hidden" name="index" value="{{loop.index}}">
+								</td>
+							</tr>
+                            {%endfor%} {%endif%}
+						</tbody>
+					</table>
+				</div>
+                <div class="row-fluid">
+                    <div class="span12">
+                        <div class="widget widget-4">
+                            <div class="separator"></div>
+                            <button class="btn btn-primary cancel" type="submit">Simpan</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</form>

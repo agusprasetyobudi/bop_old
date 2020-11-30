@@ -1,0 +1,12 @@
+# Crazy Framework supports Friendly URLs via this .htaccess file. You must serve web
+
+RewriteEngine On
+RewriteBase /bop
+
+RewriteRule ^(manager|assets)/*$ - [L]
+RewriteRule \.(jpg|jpeg|png|gif|ico)$ - [L]
+
+# The Friendly URLs part
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?cfq=$1 [L,QSA]

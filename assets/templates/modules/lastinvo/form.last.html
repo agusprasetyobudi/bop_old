@@ -1,0 +1,135 @@
+{%set periode_bulan=''%}
+{%set periode_tahun=''%}
+{%for key,val in data%}
+    {%set periode_bulan=val.periode_bulan%}
+    {%set periode_tahun=val.periode_tahun%}
+{%endfor%}
+<script>
+var next_amandemen = "{{SITE_URL('lastinvo/manage/'~kode_kontrak~'/'~(amandemen|length+1))}}";
+$(document).on('ready',function(){
+	$(".invoice-sd-saat-ini").maskMoney({thousands:',', decimal:'', allowZero:true,precision:0});
+	$.validator.addMethod("currency_selisih", function(value, element, params) {
+		elem = $(element);
+		var nom_kontrak = elem.parent().parent().parent().parent().find('input.nominal_kontrak').val();
+		kontrak =  Number(nom_kontrak.replace(/,/g,''));
+		invo = Number(value.replace(/,/g,''));
+		if(invo>kontrak)
+		{
+			return false;
+		}
+		return true;
+	
+	}, $.validator.format("Nominal Invoice Harus Kurang Dari Atau Sama Dengan Nilai Kontrak"));
+	/*$.validator.addClassRules("invoice-sd-saat-ini", {
+		min:0,
+		currency_selisih:true
+	});*/
+	$("#frm-invoice").validate({
+		rules:{
+			"invoicesaatini[]":{
+				currency_selisih:true
+			}
+		},
+		submitHandler:function(form){
+			form.submit();
+		}
+	});
+	$("#nextamandemen").on('click',function(){
+		$("#periode_tahun").val('{{periode_tahun}}');
+		$("#periode_bulan").val('{{periode_bulan}}');
+		$("#frm-invoice").attr('action',next_amandemen);
+		$("#frm-invoice").submit();
+	});
+});
+</script>
+<form action="{{SITE_URL('lastinvo/manage/'~kode_kontrak~'/'~amandemen_aktif)}}" method="post" id="frm-invoice">
+<input type="hidden" name="kode_kontrak" id="kode_kontrak" value="{{kode_kontrak}}" />
+<div class="innerLR">
+	<div class="widget widget-gray widget-body-white">
+		<div class="widget-head">
+			<h4 class="heading btn-block">Form Invoice Terakhir Untuk Kode Kontrak [ {{kode_kontrak}} ] 
+            {%if (amandemen|length<4) and (amandemen|length>0)%}
+            <button type="button" id="nextamandemen" class="btn btn-primary btn-small pull-right" style="margin-top:0.22em;margin-left:10px;">Simpan Ke Amandemen Selanjutnya</button>
+            {%endif%}
+             <button type="submit" class="btn btn-primary btn-small pull-right" style="margin-top:0.22em">Simpan</button>
+            </h4>
+            
+		</div>
+		<div style="padding: 10px 0 0;" class="widget-body">
+        	<div class="row-fluid">
+            	<div class="span12">
+                	<div class="widget widget-4">
+                    	<div class="row-fluid">
+                        {%for key,val in amandemen%}
+                        <a href="{{SITE_URL('lastinvo/manage/'~kode_kontrak~'/'~val.amandemen)}}" class="btn btn-primary">
+                            {%if val.amandemen==1%}
+                                Original
+                            {%else%}
+                                Amandemen {{val.amandemen}}
+                            {%endif%}
+                        </a>
+                        {%endfor%}
+                    	</div>
+                    </div>
+            	</div>
+            </div>
+			<div class="row-fluid">
+                <div class="span12">
+                	<div class="widget widget-4">
+                    	<div class="widget-head"><h4 class="heading">Periode Invoice</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid controls">
+                        	<select name="periode_bulan" class="span4 required" id="periode_bulan" {{disable}}>
+                            	<option value="">--PILIH BULAN--</option>
+                                {%for key,val in list_month%}
+                                <option value="{{val.id}}" {%if val.id==periode_bulan%}selected="selected"{%endif%}>{{val.bulan}}</option>
+                                {%endfor%}
+                            </select>
+                            <select id="periode_tahun" class="span4 required" name="periode_tahun" {{disable}}>
+                                <option value="">--SELECT TAHUN--</option>
+                                {%set start = "now"|date("Y")%}
+                                {%set end = start+5%}
+                                {%for i in start..end%}
+                                <option value="{{i}}" {%if i==periode_tahun%}selected="selected"{%endif%}>{{i}}</option>
+                                {%endfor%}
+                            </select>
+                        </div>
+                    </div>
+				</div>
+            </div>
+            <div class="row-fluid">
+            <div class="span12">
+                <div class="widget widget-4">
+                	<div class="row-fluid">
+                    	{%for key,val in data%}
+                        <div class="widget-head">
+                            <h3 class="heading">{{val.nama_aktifitas}}</h3>
+                        </div>
+                        <div class="widget-body">
+                            <div class="row-fluid">
+                                <div class="span4">
+                                    <div class="control-group">
+                                        <label for="firstname" class="control-label">Nilai Kontrak</label>
+                                        <div class="controls"><input type="text" readonly class="span12 nominal_kontrak" value="{{val.nilai_kontrak|number_format(0,'.',',')}}"></div>
+                                    </div>
+                                </div>
+                                <div class="span8">
+                                    <div class="control-group">
+                                        <label for="password" class="control-label">Invoice</label>
+                                        <div class="controls">
+                                        	<input type="text" name="invoicesaatini[]" class="span12 invoice-sd-saat-ini" value="{{val.invoice|number_format(0,'.',',')}}">
+                                        	<input type="hidden" name="invoice_kode[]" value="{{val.nama_aktifitas}}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {%endfor%}
+					</div>
+                 </div>
+			</div>
+			</div>
+		</div>	
+	</div>
+</div>
+</form>

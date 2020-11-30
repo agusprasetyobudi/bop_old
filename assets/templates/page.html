@@ -1,0 +1,44 @@
+{%include 'chunks/p.header.html'%}
+	
+	<!-- Start Content -->
+	<div class="container-fluid">
+		
+		{%include 'chunks/navbar.html'%}
+		
+				<div id="wrapper">
+		{%include 'chunks/leftmenu.html'%}
+		<div id="content">
+        {%include 'chunks/bread.html'%}
+<div class="separator"></div>
+
+{%if __REQUEST.object=="index"%}
+<div class="heading-buttons">
+	<h3 class="glyphicons display"><i></i> Dashboard</h3>
+	<div class="buttons pull-right">
+		{#<a href="" class="btn btn-default btn-icon glyphicons edit"><i></i> Edit</a>#}
+	</div>
+	<div class="clearfix" style="clear: both;"></div>
+</div>
+{%endif%}
+<div class="separator"></div>
+
+{#starting include content#}
+{%if content is defined%}
+{%set content = "modules/" ~ content%}
+{%include(content)%}
+{%endif%}
+{#end including content#}
+            <!-- End Content -->
+    </div>
+    <!-- End Wrapper -->
+    </div>
+    
+    <!-- Sticky Footer -->
+    {%include 'chunks/sticky.footer.html'%}
+            
+</div>
+	
+	
+
+</body>
+</html>

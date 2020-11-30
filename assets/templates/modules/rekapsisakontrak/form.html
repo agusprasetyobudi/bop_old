@@ -1,0 +1,117 @@
+<script>
+$(document).on('ready',function(){
+	$("#kontrak-form").validate({
+		submitHandler:function(form){
+			form.submit();
+		}
+	});
+	$("#table-list-komponen").dataTable();
+});
+</script>
+<form action="" method="post" id="kontrak-form">
+<div class="innerLR">
+	<div class="widget widget-gray widget-body-white">
+		<div class="widget-head">
+			<h4 class="heading">Rekapitulasi Sisa Kontrak</h4>
+		</div>
+		<div style="padding: 10px 0 0;" class="widget-body">
+			
+			<div class="row-fluid">
+                <div class="span12">
+                	<div class="widget widget-4">
+                        <div class="widget-head"><h4 class="heading">OSP</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                        	<div class="controls">
+                                <select id="id_osp" name="id_osp" class="span6">
+                                    <option value="">SELECT OSP</option>
+                                    {%for key,val in list_osp%}
+                                    <option value="{{val.id}}" {%if id_osp==val.id%}selected="selected"{%endif%}>{{val.osp_name}}</option>
+                                    {%endfor%}
+                                </select>
+                                <select id="amandemen" name="amandemen" class="span6">
+                                    <option value="">SELECT AMANDEMEN</option>
+                                    <option value="1" {%if amandemen=='1'%}selected="selected"{%endif%}>Original</option>
+                                    <option value="2" {%if amandemen=='2'%}selected="selected"{%endif%}>Amandemen 2</option>
+                                    <option value="3" {%if amandemen=='3'%}selected="selected"{%endif%}>Amandemen 3</option>
+                                    <option value="4" {%if amandemen=='4'%}selected="selected"{%endif%}>Amandemen 4</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="widget-head"><h4 class="heading">Periode Invoice</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                        	<div class="controls">
+                            	<select name="periode_bulan" id="periode_bulan" class="span4">
+                                    <option value="">--PILIH PERIODE INVOICE BULAN--</option>
+                                    {%for key,val in list_month%}
+                                    <option value="{{val.id}}" {%if periode_bulan==val.id%}selected="selected"{%endif%}>{{val.bulan}}</option>
+                                    {%endfor%}
+                                </select>
+                                
+                                <select name="periode_tahun" id="periode_tahun" class="span6">
+                                    <option value="">--PILIH PERIODE INVOICE TAHUN--</option>
+                                    {%set start = 2000%}
+                                    {%set end = "now"|date("Y")%}
+                                    {%for i in start..end%}
+                                    <option value="{{i}}" {%if i==periode_tahun%}selected="selected"{%endif%}>{{i}}</option>
+                                    {%endfor%}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row-fluid">
+                            <div class="controls">
+								<button class="btn btn-primary" type="submit">View</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+			</div>
+			
+		</div>	
+	</div>
+</div>
+</form>
+<div class="innerLR">
+	<div class="widget widget-gray widget-body-white">
+		<div class="widget-head">
+			<h4 class="heading">Komponen Biaya Kontrak</h4>
+		</div>
+		<div style="padding: 10px 0 0;" class="widget-body">
+			<div class="row-fluid">
+            <table class="table table-bordered table-primary" id="table-list-komponen">
+				<thead>
+					<tr>
+						<th class="center">No.</th>
+                        <th class="center">Kode RAB</th>
+						<th class="center">Komponen</th>
+						<th class="center">Subkomponen / Aktifitas</th>
+                        <th class="center">Kontrak Amandemen</th>
+                        <th class="center">Invoice Lalu</th>
+						<th class="center">Invoice Saat Ini</th>
+                        <th class="center">Invoice s/d Saat Ini</th>
+                        <th class="center">Sisa Kontrak</th>
+					</tr>
+				</thead>
+				<tbody>
+                	{%set inc=1%}
+                    {%for keys,vals in list%}
+                    <tr>
+						<td class="center">{{inc}}</td>
+                        {%set inc=inc+1%}
+                        <td class="center">{{vals.kode_kontrak}}</td>
+						<td class="center">{{vals.nama_komponen}}</td>
+						<td class="center">{{vals.nama_aktifitas}}</td>
+                        <td class="center">{%if vals.amandemen==1%}Original{%else%}Amandemen {{vals.amandemen}}{%endif%}</td>
+                        <td class="center">{{vals.invoice|number_format("0",".",",")}}</td>
+						<td class="center">{{vals.jumlah_invoice_berjalan|number_format("0",".",",")}}</td>
+                        <td class="center">{{(vals.invoice+vals.jumlah_invoice_berjalan)|number_format("0",".",",")}}</td>
+                        <td class="center">{{(vals.nilai_kontrak-(vals.invoice+vals.jumlah_invoice_berjalan))|number_format("0",".",",")}}</td>
+					</tr>
+                    {%endfor%}
+				</tbody>
+			</table>
+            </div>
+		</div>	
+	</div>
+</div>

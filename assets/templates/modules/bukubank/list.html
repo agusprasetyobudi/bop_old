@@ -1,0 +1,122 @@
+<style>
+#firm-table tr.green td
+{
+	background:#C6EBB3;
+}
+#firm-table tr.red td
+{
+	background:#FFC0C6;
+}
+</style>
+<div class="innerLR">
+	<div class="widget widget-gray widget-body-white">
+		<div class="widget-head">
+			<h4 class="heading">Data Buku Kas</h4>
+		</div>
+        <div style="background:#fff; padding-top:20px;">
+        <a type="button" class="btn btn-primary btn-icon glyphicons asterisk" href="{{SITE_URL('bukubank/add')}}"><i></i>Tambah Data</a>
+        </div>
+		<div class="widget-body" style="padding: 10px 0;">
+			<table class="table table-striped table-bordered table-primary table-condensed" id="firm-table">
+				<thead>
+					<tr>
+					  <th>No</th>
+                      <th>No Bukti Transfer</th>
+                      <th>Tanggal</th>
+                      <th>Uraian</th>
+                      <th>No Bukti</th>
+                      <th>Transaksi Debet</th>
+                      <th>Transaksi Kredit</th>
+                      <th>Saldo Debet</th>
+					</tr>
+				</thead>
+				<tbody>
+                	{%set debet=0%}
+                    {%set kredit=0%}
+                    {%set saldo=0%}
+                    {%set no_bukti = ''%}
+                    {%set index=0%}
+                	{%for key,val in list%}
+                   {# {%if no_bukti!=val.no_bukti_transfer%}
+                    	{%set no_bukti=val.no_bukti_transfer%}
+                        {%set saldo=saldo+val.firm.jumlah%}
+                        <tr>
+                          <td>{{index}}</td>
+                          <td>{{val.firm.no_bukti}}</td>
+                          <td>{{val.firm.tanggal_transfer|date('d-m-Y')}}</td>
+                          <td>Transfer Firm</td>
+                          <td>{{val.firm.no_bukti}}</td>
+                          <td></td>
+                          <td>{{val.firm.jumlah|number_format(0,'.',',')}}</td>
+                          <td>{{saldo|number_format(0,'.',',')}}</td>
+                          {%set kredit=kredit+val.firm.jumlah%}
+                        </tr>
+                    {%endif%} #}
+                    {%set index=index+1%}
+                    {% set index_c = index %}
+                    {% set no_bukti_transfer = val.no_bukti_transfer %}
+                    {% set tanggal = val.tanggal %}
+                    {% set nama_komponen =  val.uraian.nama_komponen%}
+                    {% set nama_subkomponen = val.uraian.nama_subkomponen%}
+                    {% set nama_aktifitas = val.uraian.nama_aktifitas%}
+                    {% set no_bukti = val.no_bukti%}
+                    {% set total = val.total%} 
+					<tr>
+                    	
+					  <td>{{index_c}}</td>
+                      <td>{{no_bukti_transfer}}</td>
+                      <td>{{tanggal|date('d-m-Y')}}</td>
+                      <td>{{nama_komponen}} - {%if nama_subkomponen=='Activity'%}{{nama_aktifitas}}{%else%}{{nama_subkomponen}} ({{nama_aktifitas}}){%endif%}</td>
+                      <td>{{no_bukti}}</td>
+                      <td>{{total|number_format(0,'.',',')}}</td>
+                      <td></td>
+                      <td>{{(saldo+total)|number_format(0,'.',',')}}</td>
+                      {%set saldo=saldo+total%}
+                      {%set debet=debet+total%}
+                      {%set index_c=index_c+1%}
+					</tr>
+                    	
+                    {%for d_key,d_val in val.debet%}
+                    	{%set index=index+1%}
+                        {% set index_c = index %}
+                        {% set no_bukti_transfer = no_bukti_transfer %}
+                        {% set tanggal = d_val.tanggal %}
+                        {% set no_bukti = d_val.no_bukti%}
+                        {% set total = d_val.total%} 
+                        <tr>
+                            
+                          <td>{{index_c}}</td>
+                          <td>{{no_bukti_transfer}}</td>
+                          <td>{{tanggal|date('d-m-Y')}}</td>
+                          <td>{{nama_komponen}} - {%if nama_subkomponen=='Activity'%}{{nama_aktifitas}}{%else%}{{nama_subkomponen}} ({{nama_aktifitas}}){%endif%}</td>
+                          <td>{{no_bukti}}</td>
+                          <td></td>
+                          <td>{{total|number_format(0,'.',',')}}</td>
+                          <td>{{(saldo-total)|number_format(0,'.',',')}}</td>
+                          {%set saldo=saldo-total%}
+                          {%set kredit=kredit+total%}
+                          {%set index_c=index_c+1%}
+                        </tr>
+                       {%endfor%}
+                    {%endfor%}
+				</tbody>
+                <tfoot>
+                	<tr>
+                    	<td colspan="5">
+                        
+                        </td>
+                        <td>
+                        	{{debet|number_format(0,'.',',')}}
+                        </td>
+                        <td>
+                        	{{kredit|number_format(0,'.',',')}}
+                        </td>
+                        <td>
+                        	{{saldo|number_format(0,'.',',')}}
+                        </td>
+                    </tr>
+                </tfoot>
+			</table>
+		</div>
+	</div>
+</div>

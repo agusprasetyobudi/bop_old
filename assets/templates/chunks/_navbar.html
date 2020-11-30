@@ -1,0 +1,159 @@
+<div class="navbar main">
+			<a href="{{__SETTINGS.base_url}}" class="pull-left" style="line-height:40px;padding-left:10px"><span><img src="assets/templates/theme/images/logo.gif"  width="28" /> {{__SETTINGS.title}}</span></a>
+			
+						{#<button type="button" class="btn btn-navbar">
+				<span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span>
+			</button>#}
+			<ul class="topnav pull-right">
+				{%if (__SESSION.bop_last.id_group==4) or (__SESSION.bop_last.id_group==1)%}
+                <li class="visible-desktop">
+                	<a href="{{SITE_URL('firm')}}" class="glyphicons read_it_later"><i></i><span>Firm Transfer</span></a>
+                </li>
+                {%endif%}
+                
+                {%if ((__SESSION.bop_last.prev.transfer is defined) and (__SESSION.bop_last.prev.transfer.view==1))
+                %}
+                <li class="visible-desktop"><a class="glyphicons read_it_later" href="{{SITE_URL('transfer')}}"><i></i><span>Rekapitulasi Bukti Transfer</span></a></li>
+                 <li class="visible-desktop"><a class="glyphicons read_it_later" href="{{SITE_URL('pengeluaran')}}"><i></i><span>Rekapitulasi Bukti Pengeluaran</span></a></li>
+                 <li class="visible-desktop"><a class="glyphicons read_it_later" href="{{SITE_URL('bukubank')}}"><i></i>Buku Kas</a></li>
+                 <li class="visible-desktop"><a class="glyphicons read_it_later" href="{{SITE_URL('bukukas')}}"><i></i>Buku Bank</a></li>
+                {%endif%}
+                
+                {%if (__SESSION.bop_last.id_group==2) or (__SESSION.bop_last.id_group==1)
+                %}
+                <li class="dropdown visible-desktop">
+                	<a href="#" data-toggle="dropdown" class="glyphicons show_lines"><i></i>Level PMU <span class="caret"></span></a>
+                    <ul class="dropdown-menu pull-right"><li class=""><a href="{{SITE_URL('pmu')}}"><span>Rekapitulasi Input level PMU</span></a></li>				                <li class=""><a href="{{SITE_URL('lastinvo')}}"><span>Invoice Terakhir</span></a></li>
+                    <li class=""><a href="{{SITE_URL('rekapsisakontrak')}}"><span>Rekapitulasi Sisa Kontrak</span></a></li>
+
+                    </ul>
+                </li>
+
+                {%endif%}
+                {%if (__SESSION.bop_last.id_group==4) or (__SESSION.bop_last.id_group==3)  or (__SESSION.bop_last.id_group==1) %}
+                <li class="dropdown visible-desktop">
+                	<a href="#" data-toggle="dropdown" class="glyphicons show_lines"><i></i>Report <span class="caret"></span></a>
+                    <ul class="dropdown-menu pull-right">
+                    	{%if (__SESSION.bop_last.id_group==4) or (__SESSION.bop_last.id_group==1)%}
+                        <li class=""><a href="{{SITE_URL('transfer/report')}}"><span>Firm Transfer</span></a></li>
+                        {%endif%}
+                        {%if (__SESSION.bop_last.id_group==3) or (__SESSION.bop_last.id_group==1)%}
+                        <li class=""><a href="{{SITE_URL('transfer/penerimaanreport')}}"><span>Penerimaan Transfer</span></a></li>
+                        <li class=""><a href="{{SITE_URL('pengeluaran/pengeluaranreport')}}"><span>Pengeluaran Transfer</span></a></li>
+                        <li class=""><a href="{{SITE_URL('bukubank/report')}}"><span>Buku Bank</span></a></li>
+                        {%endif%}
+                    </ul>
+                </li>
+                {%endif%}
+                {%if ((__SESSION.bop_last.prev.kontrak is defined) and (__SESSION.bop_last.prev.kontrak.view==1))
+	            %}
+                <li class="visible-desktop">
+                	<a href="{{SITE_URL('kontrak')}}" class="glyphicons cargo"><i></i>Kontrak</a>
+                </li>
+                {%endif%}
+                
+                {#setting for data master #}
+                {# set to menu has sub menu active #}
+                    {#default params#}
+                    {% set active = false %}
+                    {%
+                    if (__REQUEST.object=="propinsi") 
+                    or (__REQUEST.object=="osp")
+                    or (__REQUEST.object=="kabupaten")
+                    or (__REQUEST.object=="jabatan")
+                    or (__REQUEST.object=="kantor")
+                    or (__REQUEST.object=="komponen")
+                    or (__REQUEST.object=="aktifitas")
+                    %}
+                        {% set active = true %}
+                    {%endif%}
+                {#end set #}
+                {%if ((__SESSION.bop_last.prev.propinsi is defined) and (__SESSION.bop_last.prev.propinsi.view==1)) or 
+            	((__SESSION.bop_last.prev.kabupaten is defined) and (__SESSION.bop_last.prev.kabupaten.view==1)) or 
+                ((__SESSION.bop_last.prev.osp is defined) and (__SESSION.bop_last.prev.osp.view==1)) or
+                ((__SESSION.bop_last.prev.kantor is defined) and (__SESSION.bop_last.prev.kantor.view==1)) or
+                ((__SESSION.bop_last.prev.jabatan is defined) and (__SESSION.bop_last.prev.jabatan.view==1)) or
+                ((__SESSION.bop_last.prev.komponen is defined) and (__SESSION.bop_last.prev.komponen.view==1)) or
+                ((__SESSION.bop_last.prev.aktifitas is defined) and (__SESSION.bop_last.prev.aktifitas.view==1))
+	            %}
+                
+				<li class="dropdown visible-desktop">
+					<a href="" data-toggle="dropdown" class="glyphicons cogwheel"><i></i>Data Master <span class="caret"></span></a>
+					<ul class="dropdown-menu pull-right">
+                    	{%if ((__SESSION.bop_last.prev.propinsi is defined) and (__SESSION.bop_last.prev.propinsi.view==1)) %}
+                        <li class=""><a href="{{SITE_URL('propinsi')}}"><span>Propinsi</span></a></li>
+                        {%endif%}
+						{%if ((__SESSION.bop_last.prev.kabupaten is defined) and (__SESSION.bop_last.prev.kabupaten.view==1)) %}
+                        <li class=""><a href="{{SITE_URL('kabupaten')}}"><span>Kabupaten / Kota</span></a></li>
+                        {%endif%}
+                        {%if ((__SESSION.bop_last.prev.osp is defined) and (__SESSION.bop_last.prev.osp.view==1)) %}
+                        <li class=""><a href="{{SITE_URL('osp')}}"><span>OSP</span></a></li>
+                        {%endif%}
+                        {%if ((__SESSION.bop_last.prev.kantor is defined) and (__SESSION.bop_last.prev.kantor.view==1)) %}
+                        <li class=""><a href="{{SITE_URL('kantor')}}"><span>Kantor</span></a></li>
+                        {%endif%}
+                        {%if ((__SESSION.bop_last.prev.jabatan is defined) and (__SESSION.bop_last.prev.jabatan.view==1)) %}
+                        <li class=""><a href="{{SITE_URL('jabatan')}}"><span>Jabatan</span></a></li>
+                        {%endif%}
+                        {%if ((__SESSION.bop_last.prev.komponen is defined) and (__SESSION.bop_last.prev.komponen.view==1)) %}
+                        <li class=""><a href="{{SITE_URL('komponen')}}"><span>Komponen Biaya</span></a></li>
+                        {%endif%}
+                        {%if ((__SESSION.bop_last.prev.aktifitas is defined) and (__SESSION.bop_last.prev.aktifitas.view==1)) %}
+                        <li class=""><a href="{{SITE_URL('aktifitas')}}"><span>Aktifitas</span></a></li>
+                        {%endif%}
+					</ul>
+				</li>
+				{%endif%}	
+                
+                
+                {#end data master setting#}
+                {#setting for pengguna #}
+                {# set to menu has sub menu active #}
+                    {#default params#}
+                    {% set active = false %}
+                    {%
+                    if (__REQUEST.object=="pengguna") 
+                    or (__REQUEST.object=="grouppengguna")
+                    %}
+                        {% set active = true %}
+                    {%endif%}
+                {#end set #}
+                {%if ((__SESSION.bop_last.prev.grouppengguna is defined) and (__SESSION.bop_last.prev.grouppengguna.view==1)) or 
+                    ((__SESSION.bop_last.prev.pengguna is defined) and (__SESSION.bop_last.prev.pengguna.view==1))
+                %}
+                <li class="dropdown visible-desktop">
+					<a href="" data-toggle="dropdown" class="glyphicons cogwheel"><i></i>Pengguna <span class="caret"></span></a>
+                    <ul class="dropdown-menu pull-right">
+                    	<li class=""><a href="{{SITE_URL('grouppengguna')}}"><span>Kelompok Pengguna</span></a></li>
+	                    <li class=""><a href="{{SITE_URL('pengguna')}}"><span>Pengguna</span></a></li>
+                    </ul>
+                </li>
+                {%endif%}
+	            {#end pengguna setting#}
+				<li class="account">
+										<a data-toggle="dropdown" href="#" class="glyphicons logout lock"><span class="hidden-phone text">Logout (<b style="text-transform:uppercase;font-style:italic;">{{__SESSION.bop_last.nickname}}</b>)</span><i></i></a>
+					<ul class="dropdown-menu pull-right">
+                    	{%if __SESSION.bop_last.id_group!=1%}
+						<li><a href="{{SITE_URL('pengguna/changepass')}}" class="glyphicons cogwheel">Change Password<i></i></a></li>
+                        {%endif%}
+						{#<li><a href="form_demo.html?lang=en" class="glyphicons camera">My Photos<i></i></a></li>
+						<li class="highlight profile">
+							<span>
+								<span class="heading">Profile <a href="form_demo.html?lang=en" class="pull-right">edit</a></span>
+								<span class="img"></span>
+								<span class="details">
+									<a href="form_demo.html?lang=en">Mosaic Pro</a>
+									contact@mosaicpro.biz
+								</span>
+								<span class="clearfix"></span>
+							</span>
+						</li>#}
+						<li>
+							<span>
+								<a class="btn btn-default btn-small pull-right" style="padding: 2px 10px; background: #fff;" href="{{SITE_URL('oauth/signout')}}">Sign Out</a>
+							</span>
+						</li>
+					</ul>
+									</li>
+			</ul>
+		</div>

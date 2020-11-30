@@ -1,0 +1,360 @@
+<script>
+
+function loadkantor()
+{
+	var edit_id= "{{kode_kantor}}";
+	$("#kontrak-form #kode_kantor").find('option').remove();
+	$("#kontrak-form #kode_kantor").append('<option value="">--SELECT KANTOR--</option>');
+	if($("#kontrak-form #id_osp")!="")
+	{
+		$.ajax({
+		  type: "POST",
+		  url: "{{SITE_URL('kantor/getlist_by_osp_ajax')}}",
+		  data: {id_osp:$("#kontrak-form #id_osp").val(),id_kabupaten:$("#kontrak-form #id_kabupaten").val()},
+		  dataType: 'json'
+		}).done(function(data){
+			if(data.success)
+			{
+				$.each(data.data,function(key,val){
+					if(edit_id==val.kode_kantor)
+					$("#kontrak-form #kode_kantor").append('<option value="'+val.kode_kantor+'" selected="selected">'+val.nama_kantor+' - '+val.nama_kabupaten+'</option>');
+					else
+					$("#kontrak-form #kode_kantor").append('<option value="'+val.kode_kantor+'">'+val.nama_kantor+' - '+val.nama_kabupaten+'</option>');
+				});
+			}
+		});
+	}
+}
+$(document).on('ready',function(){
+	$("#kontrak-form").validate({
+		submitHandler: function(form) {
+			if($("#table-list-komponen tbody tr").size()==0)
+			{
+				bootbox.alert('<div class="alert alert-block alert-error fade in"><h4 class="alert-titleing" align="center">Silakan Masukan Komponen Biaya Kontrak Terlebih Dahulu<br>Minimal Satu Biaya Kontrak</h4></div>');
+				//bootbox.alert("Silakan Masukan Komponen Biaya Kontrak Terlebih Dahulu<br>Minimal Satu Biaya Kontrak");
+			}
+			else
+			{
+				var edit_id= "{{kode_kantor}}";
+				if(edit_id=="")
+					url = "{{SITE_URL('kontrak/add')}}";
+				else
+					url = "{{SITE_URL('kontrak/edit')}}";
+				$.ajax({
+				  type: "POST",
+				  url: url,
+				  data: $("#kontrak-form").serialize(),
+				  dataType: 'json'
+				}).done(function(data){
+					if(data.success)
+					document.location.href="{{SITE_URL('kontrak')}}";
+				});
+			}
+			return false;
+		}
+	});
+	$(".datepicker").datepicker({dateFormat:"dd-mm-yy",changeYear:true,changeMonth:true});
+	$("#kontrak-form #id_osp").on('change',function(){
+		loadkantor();
+	});
+	$("#kontrak-form #id_komponen").on('change',function(){
+		$("#kontrak-form #id_subkomponen").find('option').remove();
+		$("#kontrak-form #id_subkomponen").append('<option value="">-SELECT SUB KOMPONEN-</option>');
+		$.ajax({
+		  type: "POST",
+		  url: "{{SITE_URL('komponen/getsubkomponen_by_komponen_ajax')}}",
+		  data: {id_komponen:$("#kontrak-form #id_komponen").val()},
+		  dataType: 'json'
+		}).done(function(data){
+			if(data.success)
+			{
+				$.each(data.data,function(key,val){
+					$("#kontrak-form #id_subkomponen").append('<option value="'+val.id+'">'+val.nama_subkomponen+'</option>');
+				});
+			}
+			$("#kontrak-form #id_subkomponen").trigger('change');
+		});
+	});
+	$("#kontrak-form #id_subkomponen").on('change',function(){
+		$("#kontrak-form #id_aktifitas").find('option').remove();
+		$("#kontrak-form #id_aktifitas").append('<option value="">-SELECT AKTIFITAS-</option>');
+		$.ajax({
+		  type: "POST",
+		  url: "{{SITE_URL('aktifitas/list_subkomponen_aktifitas')}}",
+		  data: {id_subkomponen:$("#kontrak-form #id_subkomponen").val()},
+		  dataType: 'json'
+		}).done(function(data){
+			if(data.success)
+			{
+				$.each(data.data,function(key,val){
+					$("#kontrak-form #id_aktifitas").append('<option value="'+val.id+'">'+val.nama_aktifitas+'</option>');
+				});
+			}
+			$("#kontrak-form #id_aktifitas").trigger('change');
+		});
+	});
+	$("#btn-tambah-item").on('click',function(){
+		if($("#id_osp").val()=="")
+		{
+			bootbox.alert('<div class="alert alert-block alert-error fade in"><h4 class="alert-titleing" align="center">Silakan Pilih OSP Terlebih Dahulu</h4></div>', function() {
+				return true;		  
+			});
+			return false;
+		}
+		if($("#kode_kantor").val()=="")
+		{
+			bootbox.alert('<div class="alert alert-block alert-error fade in"><h4 class="alert-titleing" align="center">Silakan Pilih Kantor Terlebih Dahulu</h4></div>', function() {
+				return true;		  
+			});
+			return false;
+		}
+		if($("#id_aktifitas").val()=="" && $("#nominal").val()!="")
+		{
+			bootbox.alert('<div class="alert alert-block alert-error fade in"><h4 class="alert-titleing" align="center">Silakan Pilih Akitiftas Terlebih Dahulu</h4></div>', function() {
+				return true;		  
+			});
+			return false;
+		}
+		else if($("#id_aktifitas").val()!="" && $("#nominal").val()=="")
+		{
+			bootbox.alert('<div class="alert alert-block alert-error fade in"><h4 class="alert-titleing" align="center">Silakan Isi Nominal Komponen Kontrak Dengan Benar</h4></div>', function() {
+				return true;		  
+			});
+			return false;
+		}
+		else if($("#id_aktifitas").val()=="" && $("#nominal").val()=="")
+		{
+			bootbox.alert('<div class="alert alert-block alert-error fade in"><h4 class="alert-titleing" align="center">Silakan Pilih Akitiftas dan Isi Nominal Komponen Kontrak Dengan Benar</h4></div>', function() {
+				return true;		  
+			});
+			return false;
+		}
+		else if($("#id_aktifitas").val()!="" && $("#nominal").val()!="" && $("#id_osp").val()!="" && $("#kode_kantor").val()!="")
+		{
+			
+			nominal = $("#nominal").val();
+			nominal = nominal.replace(/,/g,'');
+			var subkom = $("#kontrak-form #id_subkomponen option:selected").text()=="Activity"?"":$("#kontrak-form #id_subkomponen option:selected").text();
+			var info ='<input type="hidden" name="info[]" value="id_aktifitas='+$("#id_aktifitas").val()+']|[nominal='+nominal+']|[dari='+$("#dari").val()+']|[ke='+$("#ke").val()+']|[kode_kantor='+$("#kode_kantor").val()+'">';
+			var index = $("#table-list-komponen tbody tr").size()+1;
+			$("#table-list-komponen tbody").append('<tr><td class="center">'+info+index+'</td><td>'+$("#kontrak-form #id_komponen option:selected").text()+'</td><td>'+subkom+'('+$("#kontrak-form #id_aktifitas option:selected").text()+')</td><td>'+$("#dari").val()+'</td><td>'+$("#ke").val()+'</td><td>'+$("#nominal").val()+'</td><td>'+$("#kontrak-form #kode_kantor option:selected").text()+'</td><td><button type="button" class="btn btn-inverse btn-icon glyphicons bin btn-hapus-komponen"><i></i>Hapus</button></td></tr>');
+			$("#nominal").val(0);
+			$("#dari").val("");
+			$("#ke").val("");
+			$("#id_aktifitas option:first").prop('selected',true);
+			$("#id_osp option:first").prop('selected',true);
+			$("#id_osp").trigger('change');
+		}
+	});
+	$(".btn-hapus-komponen").live('click',function(){
+		$(this).parent().parent().remove();
+		var inc=1;
+		$("#table-list-komponen tbody tr").each(function(){
+			$(this).find('td:first').text(inc);
+			inc++;
+		});
+		
+	});
+	$("#nominal").maskMoney({thousands:',', decimal:'', allowZero:true,precision:0});
+	{%if mode=='edit'%}
+		$("#id_osp").trigger('change');
+	{%endif%}
+});
+</script>
+<form action="" method="post" id="kontrak-form">
+<div class="innerLR">
+	<div class="widget widget-gray widget-body-white">
+		<div class="widget-head">
+			<h4 class="heading">Form Kontrak</h4>
+		</div>
+		<div style="padding: 10px 0 0;" class="widget-body">
+			
+			<div class="row-fluid">
+                <div class="span6">
+                
+                    <div class="widget widget-4">
+                        <div class="widget-head"><h4 class="heading">Kode Kontrak</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                            <div class="controls">
+                                <input type="text" class="span12 required" maxlength="8" placeholder="Kode Kontrak" name="kode_kontrak" id="kode_kontrak" {%if mode=='edit'%}readonly="readonly"{%endif%} value="{{kode_kontrak}}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="widget widget-4 row-fluid">
+                        <div class="widget-head"><h4 class="heading">Tanggal Kontrak</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                            <div class="controls">
+                                <input type="text" class="span12 required datepicker" placeholder="Tanggal Kontrak" name="tanggal_kontrak" id="tanggal_kontrak" readonly="readonly" value="{{tanggal_kontrak|date('d-m-Y')|default('now'|date('d-m-Y'))}}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                
+                </div>
+                <div class="span6">
+                	<div class="widget widget-4">
+                        <div class="widget-head"><h4 class="heading">Tanggal Kontrak Mulai</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                        	<div class="controls">
+	                            <input type="text" class="span12 required datepicker" placeholder="Tanggal Kontrak Mulai" name="tanggal_kontrak_mulai" id="tanggal_kontrak_mulai" readonly="readonly" value="{{tanggal_kontrak_mulai|date('d-m-Y')|default('now'|date('d-m-Y'))}}">
+                            </div>
+                        </div>
+                    </div>
+                	<div class="widget widget-4">
+                        <div class="widget-head"><h4 class="heading">Tanggal Kontrak Akhir</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid"> 
+                        	<div class="controls">
+                             <input type="text" class="span12 required datepicker" placeholder="Tanggal Kontrak Akhir" name="tanggal_kontrak_akhir" id="tanggal_kontrak_akhir" readonly="readonly" value="{{tanggal_kontrak_akhir|date('d-m-Y')|default('now'|date('d-m-Y'))}}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+			</div>
+			
+		</div>	
+	</div>
+</div>
+
+<div class="innerLR">
+	<div class="widget widget-gray widget-body-white">
+		<div class="widget-head">
+			<h4 class="heading">Komponen Biaya Kontrak</h4>
+		</div>
+		<div style="padding: 10px 0 0;" class="widget-body">
+			
+			<div class="row-fluid">
+                <div class="span6">
+                
+                    <div class="widget widget-4">
+                        <div class="widget-head"><h4 class="heading">Komponen Biaya</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                        	<div class="controls">
+                                <select id="id_komponen" class="span4">
+                                    <option value="">SELECT KOMPONEN</option>
+                                    {%for key,val in list_komponen%}
+                                    <option value="{{val.id}}">{{val.nama_komponen}}</option>
+                                    {%endfor%}
+                                </select>
+                                <select id="id_subkomponen" class="span4">
+                                    <option value="">-SELECT SUB KOMPONEN-</option>
+                                </select>
+                                <select id="id_aktifitas" class="span4">
+                                    <option value="">-SELECT AKTIFITAS-</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="widget widget-4 row-fluid">
+                        <div class="widget-head"><h4 class="heading">Nominal</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid">
+                        	<div class="controls">
+	                            <input type="text" class="span12" placeholder="Nominal" id="nominal">
+                            </div>
+                        </div>
+                    </div>
+                
+                </div>
+                <div class="span6">
+                	<div class="widget widget-4">
+                        <div class="widget-head"><h4 class="heading">Dari / Ke</h4></div>
+                        <div class="separator"></div>
+                        <div class="row-fluid"> 
+                        	<div class="controls">
+                                <input type="text" class="span6" placeholder="Dari" id="dari" value="{{dari}}">
+                                <input type="text" class="span6" placeholder="Ke" id="ke" value="{{ke}}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="widget widget-4">
+                    <div class="widget-head"><h4 class="heading">Kantor</h4></div>
+                    <div class="separator"></div>
+                        <div class="row-fluid"> 
+                        	<div class="controls">
+                            	<select id="id_osp" class="span4 required">
+                                    <option value="">--SELECT OSP--</option>
+                                    {%for key,val in list_osp%}
+                                    <option value="{{val.id}}" {%if val.id==id_osp%}selected="selected"{%endif%}>{{val.osp_name}}</option>
+                                    {%endfor%}
+                                </select>
+                                <select id="kode_kantor" class="span8">
+                                    <option value="">--SELECT KANTOR--</option>
+                                </select>
+	                            <button class="btn btn-info btn-icon glyphicons inbox_in" type="button" id="btn-tambah-item"><i></i>Tambah Item</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+			</div>
+			<div class="row-fluid">
+            <table class="table table-bordered table-primary" id="table-list-komponen">
+				<thead>
+					<tr>
+						<th class="center">No.</th>
+						<th>Komponen</th>
+						<th>Subkomponen / Aktifitas</th>
+                        <th>Dari</th>
+                        <th>Ke</th>
+						<th>Nilai Kontrak</th>
+                        <th>Kantor</th>
+                        <th>&nbsp;</th>
+					</tr>
+				</thead>
+				<tbody>
+                	{%if mode=="edit"%}
+                    {%for key,val in info%}
+                    	<tr>
+                        	<td class="center">
+                            	{{loop.index}}
+                                <input type="hidden" name="info[]" value="id_aktifitas={{val.id_aktifitas}}]|[nominal={{val.nominal}}]|[dari={{val.dari}}]|[ke={{val.ke}}">
+                            </td>
+                            <td>
+                            	{{val.nama_komponen}}
+                            </td>
+                            <td>
+                            	{%if val.nama_subkomponen=="Activity"%}
+                                	{{val.nama_aktifitas}}
+                                {%else%}
+                                	{{val.nama_subkomponen}}({{val.nama_aktifitas}})
+                                {%endif%}
+                            </td>
+                            <td>
+                            	{{val.dari}}
+                            </td>
+                            <td>
+                            	{{val.ke}}
+                            </td>
+                            <td>
+                            	{{val.nominal|number_format(0,'',',')}}
+                            </td>
+                            <td>
+                            	{{val.nama_kantor}} - {{val.nama_kabupaten}}
+                            </td>
+                            <td>
+                            	<button type="button" class="btn btn-inverse btn-icon glyphicons bin btn-hapus-komponen"><i></i>Hapus</button>
+                            </td>
+                        </tr>
+                    {%endfor%}
+                    {%endif%}
+				</tbody>
+			</table>
+            </div>
+            <div class="row-fluid">
+            	<div class="span12">
+                	<div class="widget widget-4">
+                    	<div class="separator"></div>
+            	<button class="btn btn-primary" type="submit">Simpan</button>
+                	</div>
+                </div>
+            </div>
+		</div>	
+	</div>
+</div>
+</form>

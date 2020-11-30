@@ -1,0 +1,53 @@
+{%if _script is not defined %}
+<script>
+$("#excel").show();
+</script>
+{%endif%}
+<table class="table table-bordered" border="1" cellspacing="0" id="transfer-table">
+    <thead>
+        <tr>
+          <th>No</th>
+          <th>Komponen Biaya</th>
+          <th>Sub Komponen Biaya</th>
+          <th>Item# Dikontrak</th>
+          <th>Jumlah</th>
+          <th>Periode Pemanfaatan Dana</th>
+          <th>Implementasi</th>
+          <th>Selisih</th>
+    </thead>
+    <tbody>
+    	{%set total = 0%}
+        {%set total_implementasi= 0%}
+        {%for key,val in list_top%}
+        <tr>
+        	<td valign="top">{{loop.index}}</td>
+            <td valign="top">{{val.nama_komponen}}</td>
+            <td valign="top">{%if val.nama_subkomponen=='Activity'%}{{val.nama_aktifitas}}{%else%}{{val.nama_subkomponen}}({{val.nama_aktifitas}}){%endif%}</td>
+            <td valign="top">{{val.volume}}</td>
+            <td valign="top" class="right">{{val.total_nilai_kontrak|number_format(0,'.',',')}}</td>
+            <td valign="top">{{val.periode}}</td>
+           	<td valign="top" class="right">{{val.total_implementasi|number_format(0,'.',',')}}</td>
+            {%set selisih=val.total_nilai_kontrak-val.total_implementasi%}
+            <td valign="top" class="right {%if selisih>0%}ss-green{%endif%}{%if selisih<0%}ss-red{%endif%}">{{(val.total_nilai_kontrak-val.total_implementasi)|number_format(0,'.',',')}}</td>
+        </tr>
+        {%set total=total+val.total_nilai_kontrak%}
+        {%set total_implementasi = total_implementasi+val.total_implementasi%}
+        {%endfor%}
+    </tbody>
+    <tfoot>
+    	<tr>
+        	<td colspan="4">
+            	<b>Total</b>
+            </td>
+            <td>
+            	<b>{{total|number_format(0,'.',',')}}</b>
+            </td>
+            <td colspan="2" align="right" class="right">
+            	<b>{{total_implementasi|number_format(0,'.',',')}}</b>
+            </td>
+            <td align="right" class="right">
+            	<b>{{(total-total_implementasi)|number_format(0,'.',',')}}</b>
+            </td>
+        </tr>
+    </tfoot>
+</table>
